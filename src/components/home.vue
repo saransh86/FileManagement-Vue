@@ -1,0 +1,556 @@
+<template>
+    <div class="index-page">
+        <div class="vld-parent">
+            <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
+        </div>
+        <notifications group ="notify" position="top center"/>
+        <div class="userOptions">
+            <b-dropdown class="m-md-2" variant="light">
+                <template slot="button-content">
+                    <font-awesome-icon icon="user-circle" size="3x"></font-awesome-icon>     
+                </template>
+                <b-dropdown-item v-bind:href="url + 'myProfile'">
+                    <font-awesome-icon icon="user"></font-awesome-icon>
+                    <span class="dropdown-text" > My Profile </span> 
+                </b-dropdown-item>
+                <b-dropdown-item href="/logout">
+                    <font-awesome-icon icon="sign-out-alt"></font-awesome-icon>
+                    <span class="dropdown-text" v-on:click="signOut"> Sign Out </span>
+                </b-dropdown-item>
+            </b-dropdown>
+        </div>
+
+        <h1>Welcome {{username}} </h1>
+        <p>Click away to start upload and creating directories.</p>
+        <button class="btn btn-primary" id="submitCreateDirectory" type="button"  v-b-modal.createDirectory> Create </button>
+        <button class="btn btn-primary" id="submitUploadFile" type="button" @click="$refs.file.click()"> Upload </button>
+        <button class="btn btn-primary" id="submitDelete" type="button" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</button>
+        <input type="file" hidden ref="file" name="file_to_upload" multiple v-on:change="handleFileUpload" v-on:click="resetUpload">
+        
+        
+        <h4> Your directories and files... </h4>
+        <div  class="layout">
+            <div :hidden="files.length == 0 && directories.length == 0">
+                <input type="checkbox" class="delete" v-on:click="selectAll" v-model="allSelected">
+            </div>
+            <div v-for="(dir) in directories" :key="dir" >
+                <input type="checkbox" :value=dir v-model="checkedDirs" class="delete" v-on:click="select">
+                <font-awesome-icon icon="folder-open" size="2x"></font-awesome-icon>
+                <a class="data" v-bind:href="url + dir"> {{dir}}</a>
+            </div>
+            <div v-for="(file) in files" :key="file">
+                <input type="checkbox" :value=file v-model="checkedFiles" class="delete" v-on:click="select">
+                <font-awesome-icon icon="file" size="2x"></font-awesome-icon>
+                <span class="data"  v-on:click="download" :value=file> {{file}}</span>
+                
+                <!-- <font-awesome-icon icon="trash-alt" class="delete" :name=file size="2x" v-on:click="deleteFile"></font-awesome-icon> -->
+            </div>
+        </div>
+
+         <b-modal id='createDirectory' ref="modal" title="Give a creative name to the directory!" @show="resetModal" @hidden="resetModal" @ok="handleCreateDirectory">
+            <form ref="form" @submit.stop.prevent="handleSubmitForgetPassword">
+                
+                    <b-container>    
+                        <b-row>
+                            <b-col cols="2">
+                                <font-awesome-icon icon="folder-open" size="2x" class="input-container"></font-awesome-icon>
+                            </b-col>
+                        <b-col align-self="center" cols="10">
+                            <b-form-group :state="directoryState"  :invalid-feedback="invalidFeedback" class="input-container"> 
+                                <b-form-input id="directoryName" v-model="directoryName" :state="directoryState"  required placeholder="Enter the directory Name." class="input-group-text"> </b-form-input>
+                             </b-form-group>
+                        </b-col>
+                        </b-row>
+                    </b-container>
+                
+            </form>
+        </b-modal>
+    </div>
+
+    
+</template>
+
+<script>
+import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
+import Loading from 'vue-loading-overlay';
+import {Api} from '../api';
+import lodash from 'lodash';
+export default {
+    
+    name: 'home',
+    data() {
+        return {
+            path: '', 
+            username: null,
+            directories: [],
+            files:[],
+
+            directoryName : '',
+            directoryState: null,
+            invalidFeedback: '',
+
+            checkedFiles: [],
+            checkedDirs: [],
+            allSelected : false,
+
+            isLoading: false,
+            fullPage: true,
+
+           url: "http://localhost:8080/#/"
+        }
+    },
+    async mounted () {
+        this.path = 'root/home';
+        let api = new Api();
+        const res = await api.getData('/home/welcome',  {path: this.path})
+        if(res.data.status == 200)
+        {
+            console.log("Got the data", res);
+            this.username = res.data.data.username
+            this.directories = res.data.data.directories;
+            this.files = res.data.data.files;
+        }
+        else if (res.data.status == 401)
+        {
+            this.$router.push({name: 'login'});
+        }
+        else
+        {
+            console.log("oops! Error!", res);
+             this.$notify({
+                group: 'notify',
+                title: 'Cannot load files at this time.',
+                type: 'error',
+                text: "Uh ho. Something not right. Mind relogging?",
+                duration: 10000
+            })
+        } 
+    },
+    components: {
+        Loading
+    },
+    methods:{
+        resetUpload()
+        {
+           this.$refs.file.value = '';
+        },
+        resetModal()
+        {
+            this.directoryName = ''
+            this.directoryState = null
+        },
+        async handleFileUpload(e)
+        {
+             
+             let files = e.target.files || e.dataTransfer.files;
+             let filesToUpload = [];
+             let data = new FormData();
+             this.isLoading = true;
+             setTimeout(async() => {
+                this.isLoading = false;
+                filesToUpload = lodash.filter(files, function(file){
+                    if(this.files.indexOf(file.name) == -1)
+                    {
+                        data.append("file_to_upload", file);
+                        console.log("In filter",file.name);
+                        return file.name;
+                    }
+                }.bind(this));
+              
+                data.append('path', this.path)
+                if(filesToUpload.length == 0)
+                {
+                    this.$notify({
+                        group: 'notify',
+                        title: 'Upload existing files',
+                        type: 'warn',
+                        text: "Hmm, seems the files you selected are already uploaded",
+                        duration: 10000
+                    })
+                }
+                else
+                {
+                    let api = new Api();
+                    const res = await api.postData('/file/upload', data);
+                    console.log("Uploaded", filesToUpload.length);
+                    console.log("Selected", files.length);
+                    if(res.data.status == 200)
+                    {
+                        for(let i=0; i<filesToUpload.length; i++)
+                        {
+                            console.log("pushing in the file");
+                            this.files.push(filesToUpload[i].name);  
+                    
+                        }
+                    
+                        this.$notify({
+                            group: 'notify',
+                            title: 'Upload Success!',
+                            type: 'success',
+                            text: "You. The. Man.",
+                            duration: 10000
+                        })
+                        if(filesToUpload.length != files.length)
+                        {
+                        
+                            this.$notify({
+                                group: 'notify',
+                                title: 'Upload existing files',
+                                type: 'warn',
+                                text: "Hmm, seems the files you selected are already uploaded",
+                                duration: 10000
+                            })
+                        } 
+                    }
+                    else if(res.data.status == 401)
+                    {
+                        this.$router.push({name: 'login'});
+                    }
+                    else
+                    {
+                        this.$notify({
+                            group: 'notify',
+                            title: 'Cannot confirm the upload.',
+                            type: 'error',
+                            text: "Uh ho. Something not right.",
+                            duration: 10000
+                        })
+                    }
+                 
+                }  
+            }, 1000);
+             
+        },
+        async handleCreateDirectory(bvModalEvt)
+        {
+            bvModalEvt.preventDefault()
+            if(this.directoryName == '')
+            {
+                this.directoryState = 'invalid';
+                this.invalidFeedback = "Hmm, seems no name provided for the directory?"
+                return;
+            }
+            else if (/^[a-zA-Z0-9- \'\"\(\)_]*$/.test(this.directoryName) == false)
+            {
+                this.directoryState = 'invalid';
+                this.invalidFeedback = "Hmm, seems your using special characters. Sorry, mind not using it?"
+                return;
+            }
+            else
+            {
+                const name = this.directoryName;
+                console.log("Loading.....started");
+                this.directoryState = 'valid';
+                this.isLoading = true;
+                let api = new Api();
+                const res = await api.postData('/file',{name: this.directoryName, path: this.path} )
+                setTimeout(() => {
+                    this.isLoading = false;
+                    if(res.data.status==200)
+                    {
+                    
+                        this.directories.push(name.trim());
+                        console.log("NEW directories",this.directories);
+                        this.$notify({
+                            group: 'notify',
+                            title: 'Directory Created!',
+                            type: 'success',
+                            text: "Whos the man! You the man!",
+                            duration: 10000
+                        })
+                    
+                    }
+                    else if(res.data.status == 401)
+                    {
+                        this.$router.push({name: 'login'}); 
+                    }
+                    else
+                    {
+                        this.$notify({
+                            group: 'notify',
+                            title: 'Something not right',
+                            type: 'error',
+                            text: res.data.message,
+                            duration: 10000
+                        }) 
+                    }
+                    
+                    
+                }, 2000);
+                    this.$nextTick(() => {
+                        this.$refs.modal.hide()
+                    })
+                
+                //})
+            }
+        },
+        async bulkDelete()
+        {
+            let api = new Api();
+            this.isLoading = true;
+            setTimeout(async() => {
+                this.isLoading = false;
+                if(this.checkedFiles.length > 0 && this.checkedDirs.length> 0)
+                {
+                    console.log("Click for files and dirs");
+                    console.log("FILES", this.checkedFiles);
+                    console.log("Directory", this.checkedDirs);
+                    const resFiles =  api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
+                    const resDirs =  api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path});
+               
+                    const res = await Promise.all([resFiles, resDirs]); 
+                
+                    if(res[0].data.status == 200 && res[1].data.status == 200)
+                    {
+                        this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
+                        this.files = this.files.filter(x => !this.checkedFiles.includes(x));
+                        this.$notify({
+                            group: 'notify',
+                            title: 'Delete Successful for Files and Directories!',
+                            type: 'success',
+                            text: "Feeling light!",
+                            duration: 10000
+                        })   
+                    }
+                    else if(res[0].data.status == 401 || res[1].data.status == 401)
+                    {
+                        this.$router.push({name: 'login'});
+                    }
+                    else if(res[0].data.status == 300 || res[1].data.status == 300)
+                    {
+                        console.log("uh ho! Cannot confirm the delete!");
+                        this.$notify({
+                            group: 'notify',
+                            title: 'Delete Failed. Dammit!',
+                            type: 'error',
+                            text: "Uh. Em. ok, yeah this suck.",
+                            duration: 10000
+                        })
+                    }
+                    this.checkedFiles = [];
+                    this.checkedDirs = [];
+                }
+                else if(this.checkedDirs.length > 0 && this.checkedFiles.length == 0)
+                {
+                    console.log("Click just for dirs");
+                    console.log("FILES", this.checkedFiles);
+                    console.log("Directory", this.checkedDirs);
+                //let api = new Api();
+                    const res = await api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path})
+                    console.log(res);
+                    if(res.data.status == 200)
+                    {
+                        this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
+                        this.$notify({
+                            group: 'notify',
+                            title: 'Directory Delete Success!',
+                            type: 'success',
+                            text: "Feeling light!",
+                            duration: 10000
+                        })
+                    
+                    }
+                    else if (res.data.status == 401)
+                    {   
+                        this.$router.push({name: 'login'});
+                    }
+                    else
+                    {
+                        this.$notify({
+                            group: 'notify',
+                            title: 'Delete Directory Failed. Dammit!',
+                            type: 'error',
+                            text: "Uh. Em. ok, yeah this suck.",
+                            duration: 10000
+                        })
+                    }
+                    this.checkedDirs = [];
+                }
+                else if(this.checkedFiles.length > 0 && this.checkedDirs.length == 0)
+                {
+                    const res = await api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
+                    console.log("Click just for files");
+                    console.log("FILES", this.checkedFiles);
+                    console.log("Directory", this.checkedDirs);
+                    if(res.data.status == 200)
+                    {
+                        this.files = this.files.filter(x => !this.checkedFiles.includes(x));
+                        this.$notify({
+                            group: 'notify',
+                            title: 'File Delete Success!',
+                            type: 'success',
+                            text: "Feeling light!",
+                            duration: 10000
+                        })  
+                    }
+                    else if (res.data.status == 401)
+                    {   
+                        this.$router.push({name: 'login'});
+                    }
+                    else
+                    {
+                        this.$notify({
+                            group: 'notify',
+                            title: 'File Directory Failed. Dammit!',
+                            type: 'error',
+                            text: "Uh. Em. ok, yeah this suck.",
+                            duration: 10000
+                        })
+                    }
+                    this.checkedFiles = [];
+                }
+            }, 1000);
+            this.allSelected = false;
+            //})
+
+        },
+        
+    async download(e)
+    {
+        const file = e.currentTarget.getAttribute('value');
+        try{
+            let api = new Api();
+            const res = await api.getData("/file/download",{file: file, path: this.path},'blob');
+            if(res.data.res == 401)
+            {
+                this.$router.push({name: 'login'});
+            }
+            else if(res.data.status == 300)
+            {
+                 this.$notify({
+                    group: 'notify',
+                    title: 'Mind Refreshing?',
+                    type: 'error',
+                    text: res.data.message,
+                    duration: 10000
+                })
+            }
+            else{
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', file);
+            document.body.appendChild(link);
+            link.click();
+            }
+        }
+        catch(e)
+        {
+            console.log("Error in download", e.message);
+        } 
+    },
+    async signOut()
+    {
+        let api = new Api();
+        this.isLoading = true;
+        const res = api.getData('/home/logout',{});
+       
+            this.isLoading = false;
+            if(res.data.status == 200)
+            {
+                this.$router.push({name: 'login'});
+            }
+            else if(res.data.status == 401)
+            {
+                this.$router.push({name: 'login'});
+            }
+            else 
+            {
+                this.$notify({
+                        group: 'notify',
+                        title: 'Mind Refreshing?',
+                        type: 'error',
+                        text: "Cannot logout at this time. Ugh! This sucks!",
+                        duration: 10000
+                    })
+            } 
+       
+    },
+    selectAll()
+    {
+        console.log("ALL SELECTED", this.allSelected);
+        this.checkedFiles = [];
+        this.checkedDirs = [];
+        if(!this.allSelected)
+        {
+            for(var i =0; i<this.files.length; i++)
+            {
+                this.checkedFiles.push(this.files[i]);
+            }
+            for(var j=0; j< this.directories.length; j++)
+            {
+                this.checkedDirs.push(this.directories[j]);
+            }
+        }
+        else{
+            this.checkedFiles = [];
+            this.checkedDirs = [];
+        }
+    },
+    select()
+    {
+        this.allSelected = false;
+    }
+       
+    }
+}
+</script>
+<style scoped>
+
+.index-page{
+  position:fixed;
+  right: 100px;
+  top: 70px;
+  left:100px;
+  padding: 20px;
+  background-color: white;
+  /* overflow:auto; */
+  
+}
+button {
+  margin-right: 5px;
+}
+.delete{
+    position: inherit;
+    margin-right: 10px;
+}
+.layout {
+    position: relative;
+    /* right: 100px; */
+    top: 20px;
+    /* left:inherit;
+    right: inherit; */
+    /*padding: 20px; */
+    background-color: white;
+    overflow: scroll;
+    max-height: 300px;  
+}
+h4{
+    margin-top: 20px;
+}
+.data
+{
+    font-size: 22px;
+    
+    border-top: none !important;
+    white-space: nowrap;
+    
+}
+a {
+  text-decoration: none;
+  color: black;
+}
+.dropdown-text {
+  padding: 5px;
+  text-align: center;
+}
+
+.userOptions
+{
+    float:right;
+    width:100px;
+   
+}
+</style>
+
+
