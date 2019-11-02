@@ -1,34 +1,56 @@
 <template>
+<div class="searchBar">
+<b-container>
+    <b-row align-h="center">
+        <b-col cols="4">
+            <vue-select placeholder="Search Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="allFiles" ></vue-select>
+        </b-col>
+    </b-row>
+</b-container>
     <div class="index-page">
+        
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        <notifications group ="notify" position="top center"/>
-        <div class="userOptions">
-            <b-dropdown class="m-md-2" variant="light">
-                <template slot="button-content">
-                    <font-awesome-icon icon="user-circle" size="3x"></font-awesome-icon>     
-                </template>
-                <b-dropdown-item v-bind:href="url + 'myProfile'">
-                    <font-awesome-icon icon="user"></font-awesome-icon>
-                    <span class="dropdown-text" > My Profile </span> 
-                </b-dropdown-item>
-                <b-dropdown-item href="/logout">
-                    <font-awesome-icon icon="sign-out-alt"></font-awesome-icon>
-                    <span class="dropdown-text" v-on:click="signOut"> Sign Out </span>
-                </b-dropdown-item>
-            </b-dropdown>
-        </div>
+        <notifications group ="notify" position="top right"/>
+            <b-container class="main-container">
+                <b-row align-h="between">
+                    <b-col cols=auto>
+                        <h2>Welcome {{username}} </h2>
+                    </b-col>
+                    <b-col cols=auto>
+                        <userOptions/>
+                    </b-col>
+                </b-row>
+                <b-row align-h="start">
+                    <b-col cols=auto>
+                        <p>Click away to start upload and creating directories.</p>
+                    </b-col>
+                </b-row>
+                <b-row align-h="start">
+                    <b-col cols=auto>
+                        <button class="btn btn-primary" id="submitCreateDirectory" type="button"  v-b-modal.createDirectory> Create </button>
+                    </b-col>
+                        
+                    <b-col cols=auto>
+                         <button class="btn btn-primary" id="submitUploadFile" type="button" @click="$refs.file.click()"> Upload </button>
+                         <input type="file" hidden ref="file" name="file_to_upload" multiple v-on:change="handleFileUpload" v-on:click="resetUpload">
+                    </b-col>
+                    <b-col cols=auto>
+                        <button class="btn btn-primary" id="submitDelete" type="button" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</button>
+                    </b-col>
+                    <b-col cols="auto">
+                        <button class="btn btn-primary" id="submitMove" type="button" :disabled="checkedFiles.length==0" @click="showMoveFileModal"> Move</button>
+                    </b-col>
 
-        <h1>Welcome {{username}} </h1>
-        <p>Click away to start upload and creating directories.</p>
-        <button class="btn btn-primary" id="submitCreateDirectory" type="button"  v-b-modal.createDirectory> Create </button>
-        <button class="btn btn-primary" id="submitUploadFile" type="button" @click="$refs.file.click()"> Upload </button>
-        <button class="btn btn-primary" id="submitDelete" type="button" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</button>
-        <input type="file" hidden ref="file" name="file_to_upload" multiple v-on:change="handleFileUpload" v-on:click="resetUpload">
-        
-        
-        <h4> Your directories and files... </h4>
+                </b-row>
+                <b-row align-h="start">
+                    <b-col cols=auto>
+                        <h4> Your directories and files... </h4>
+                    </b-col>
+                </b-row>
+
+            </b-container>        
         <div  class="layout">
             <div :hidden="files.length == 0 && directories.length == 0">
                 <input type="checkbox" class="delete" v-on:click="selectAll" v-model="allSelected">
@@ -66,7 +88,25 @@
             </form>
         </b-modal>
     </div>
+     <b-modal id='moveFileToDirectory' ref="moveModal" title="Move File To Directory" @show="resetModal" @hidden="resetModal" @ok="moveFileToDirectory">
+        <form ref="form1" @submit.stop.prevent="moveFileToDirectory">
+            <b-container>    
+                <b-row>
+                    <b-col cols="2">
+                        <font-awesome-icon icon="folder-open" size="2x" class="input-container"></font-awesome-icon>
+                    </b-col>
+                    <b-col align-self="center" cols="10">
+                        <b-form-group class="input-container"> 
+                            <vue-select placeholder="Search Directories" :clearable="false" label="directoryName" v-model="selectedDir" :options="allDirectories" ></vue-select>
+                        </b-form-group>
+                    </b-col>
+                </b-row>
+            </b-container>    
+        </form>
+        </b-modal>
+</div>
 
+   
     
 </template>
 
@@ -75,6 +115,9 @@ import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
 import lodash from 'lodash';
+import userOptions from './userProfileOptions';
+import VueSelect from 'vue-select';
+import 'vue-select/dist/vue-select.css';
 export default {
     
     name: 'home',
@@ -84,6 +127,10 @@ export default {
             username: null,
             directories: [],
             files:[],
+            selected :null,
+            selectedDir : null,
+            allFiles: [],
+            allDirectories: [],
 
             directoryName : '',
             directoryState: null,
@@ -100,36 +147,103 @@ export default {
         }
     },
     async mounted () {
-        this.path = 'root/home';
-        let api = new Api();
-        const res = await api.getData('/home/welcome',  {path: this.path})
-        if(res.data.status == 200)
-        {
-            console.log("Got the data", res);
-            this.username = res.data.data.username
-            this.directories = res.data.data.directories;
-            this.files = res.data.data.files;
-        }
-        else if (res.data.status == 401)
-        {
-            this.$router.push({name: 'login'});
-        }
-        else
-        {
-            console.log("oops! Error!", res);
-             this.$notify({
-                group: 'notify',
-                title: 'Cannot load files at this time.',
-                type: 'error',
-                text: "Uh ho. Something not right. Mind relogging?",
-                duration: 10000
-            })
-        } 
+        await this.init();
     },
     components: {
-        Loading
+        Loading,
+        VueSelect,
+        userOptions
     },
     methods:{
+        async init(){
+            this.path = 'root/home';
+            let api = new Api();
+            const welcomePromise =  api.getData('/home/welcome',  {path: this.path})
+            const allFilesPromise = api.getData('/user/get_files',{});
+            const allDirectoriesPromise = api.getData('/user/get_directories', {});
+            const [res, allFiles, allDirectories] = await Promise.all([welcomePromise, allFilesPromise, allDirectoriesPromise]);
+           // console.log("Res",res);
+            if(res.data.status == 200 && allFiles.data.status == 200 && allDirectories.data.status == 200)
+            {
+                //console.log("Got the data", allFiles.data.data);
+                this.username = res.data.data.username
+                this.directories = res.data.data.directories;
+                this.files = res.data.data.files;
+                this.allFiles = allFiles.data.data;
+                this.allDirectories = allDirectories.data.data;
+            }
+            else if (res.data.status == 401 || allFiles.data.status == 401 || allDirectories.data.status == 401)
+            {
+                this.$router.push({name: 'login'});
+            }
+            else
+            {
+                //console.log("oops! Error!", res);
+                this.$notify({
+                    group: 'notify',
+                    title: 'Cannot load files at this time.',
+                    type: 'error',
+                    text: "Uh ho. Something not right. Mind relogging?",
+                    duration: 10000
+                })
+            } 
+        },
+        async showMoveFileModal(){
+           let api = new Api(); 
+           this.isLoading = true;
+           const res = await api.getData('/user/get_directories', {});
+           this.isLoading = false;
+           if(res.data.status == 200){
+               this.allDirectories = res.data.data;
+               this.$refs['moveModal'].show();
+           } 
+           else if(res.data.status == 401){
+               this.$router.push({name: 'login'});
+           }
+           else{
+                this.$notify({
+                    group: 'notify',
+                    title: 'Cannot load directores at this time.',
+                    type: 'error',
+                    text: "Uh ho. Something not right. Mind relogging?",
+                    duration: 10000
+                })
+           }
+        },
+        async moveFileToDirectory()
+        {
+            let api = new Api();
+            this.isLoading = true;
+            // console.log("Directory Selected ", this.selectedDir);
+            // console.log("Files ", this.files);
+            const path = this.selectedDir.path + '/' + this.selectedDir.directoryName;
+            // console.log("New PAth", path);
+            const res = await api.putData('/user/move_files',{files: this.checkedFiles, path: path});
+            this.isLoading = false;
+            if(res.data.status == 200){
+                this.files = this.files.filter(x => !this.checkedFiles.includes(x));
+                this.$notify({
+                            group: 'notify',
+                            title: 'Move Successful!',
+                            type: 'success',
+                            text: res.data.message,
+                            duration: 10000
+                        })
+            }
+            else if(res.data.status == 401){
+                this.$router.push({name: 'login'});
+            }
+            else{
+                this.$notify({
+                    group: 'notify',
+                    title: 'Uh ho! Something wrong!',
+                    type: 'error',
+                    text: res.data.message,
+                    duration: 10000
+                })
+            }
+            
+        },
         resetUpload()
         {
            this.$refs.file.value = '';
@@ -138,6 +252,11 @@ export default {
         {
             this.directoryName = ''
             this.directoryState = null
+        },
+        setSelected(value) {
+            //console.log("On change", value);
+            location.href = value.path;
+            //  trigger a mutation, or dispatch an action  
         },
         async handleFileUpload(e)
         {
@@ -152,7 +271,7 @@ export default {
                     if(this.files.indexOf(file.name) == -1)
                     {
                         data.append("file_to_upload", file);
-                        console.log("In filter",file.name);
+                        //console.log("In filter",file.name);
                         return file.name;
                     }
                 }.bind(this));
@@ -172,15 +291,20 @@ export default {
                 {
                     let api = new Api();
                     const res = await api.postData('/file/upload', data);
-                    console.log("Uploaded", filesToUpload.length);
-                    console.log("Selected", files.length);
+                    //console.log("Uploaded", filesToUpload.length);
+                    //console.log("Selected", files.length);
                     if(res.data.status == 200)
                     {
+                        let currentpath = this.path.split(/\//);
+                        currentpath.splice(0,2);
                         for(let i=0; i<filesToUpload.length; i++)
                         {
-                            console.log("pushing in the file");
-                            this.files.push(filesToUpload[i].name);  
-                    
+                            //console.log("pushing in the file");
+                            this.files.push(filesToUpload[i].name);
+                            let obj = {fileName: '', path: ''};
+                            obj.fileName = filesToUpload[i].name;
+                            obj.path = "/#/" + currentpath.join('/');
+                            this.allFiles.push(obj);
                         }
                     
                         this.$notify({
@@ -239,7 +363,7 @@ export default {
             else
             {
                 const name = this.directoryName;
-                console.log("Loading.....started");
+                //console.log("Loading.....started");
                 this.directoryState = 'valid';
                 this.isLoading = true;
                 let api = new Api();
@@ -250,7 +374,7 @@ export default {
                     {
                     
                         this.directories.push(name.trim());
-                        console.log("NEW directories",this.directories);
+                        //console.log("NEW directories",this.directories);
                         this.$notify({
                             group: 'notify',
                             title: 'Directory Created!',
@@ -292,9 +416,9 @@ export default {
                 this.isLoading = false;
                 if(this.checkedFiles.length > 0 && this.checkedDirs.length> 0)
                 {
-                    console.log("Click for files and dirs");
-                    console.log("FILES", this.checkedFiles);
-                    console.log("Directory", this.checkedDirs);
+                    //console.log("Click for files and dirs");
+                    //console.log("FILES", this.checkedFiles);
+                    //console.log("Directory", this.checkedDirs);
                     const resFiles =  api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
                     const resDirs =  api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path});
                
@@ -302,8 +426,10 @@ export default {
                 
                     if(res[0].data.status == 200 && res[1].data.status == 200)
                     {
-                        this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
-                        this.files = this.files.filter(x => !this.checkedFiles.includes(x));
+                        // this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
+                        // this.files = this.files.filter(x => !this.checkedFiles.includes(x));
+                        // this.allFiles = this.allFiles.filter(x => !this.allFiles.includes(x));
+                        await this.init();
                         this.$notify({
                             group: 'notify',
                             title: 'Delete Successful for Files and Directories!',
@@ -318,7 +444,7 @@ export default {
                     }
                     else if(res[0].data.status == 300 || res[1].data.status == 300)
                     {
-                        console.log("uh ho! Cannot confirm the delete!");
+                        //console.log("uh ho! Cannot confirm the delete!");
                         this.$notify({
                             group: 'notify',
                             title: 'Delete Failed. Dammit!',
@@ -332,15 +458,16 @@ export default {
                 }
                 else if(this.checkedDirs.length > 0 && this.checkedFiles.length == 0)
                 {
-                    console.log("Click just for dirs");
-                    console.log("FILES", this.checkedFiles);
-                    console.log("Directory", this.checkedDirs);
+                    //console.log("Click just for dirs");
+                    //console.log("FILES", this.checkedFiles);
+                    //console.log("Directory", this.checkedDirs);
                 //let api = new Api();
                     const res = await api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path})
-                    console.log(res);
+                    //console.log(res);
                     if(res.data.status == 200)
                     {
-                        this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
+                        // this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
+                        await this.init();
                         this.$notify({
                             group: 'notify',
                             title: 'Directory Delete Success!',
@@ -369,12 +496,14 @@ export default {
                 else if(this.checkedFiles.length > 0 && this.checkedDirs.length == 0)
                 {
                     const res = await api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
-                    console.log("Click just for files");
-                    console.log("FILES", this.checkedFiles);
-                    console.log("Directory", this.checkedDirs);
+                    //console.log("Click just for files");
+                    //console.log("FILES", this.checkedFiles);
+                    //console.log("Directory", this.checkedDirs);
                     if(res.data.status == 200)
                     {
-                        this.files = this.files.filter(x => !this.checkedFiles.includes(x));
+                        // this.files = this.files.filter(x => !this.checkedFiles.includes(x));
+                        // this.allFiles = this.allFiles.filter(x => !this.allFiles.includes(x));
+                        await this.init();
                         this.$notify({
                             group: 'notify',
                             title: 'File Delete Success!',
@@ -439,36 +568,9 @@ export default {
             console.log("Error in download", e.message);
         } 
     },
-    async signOut()
-    {
-        let api = new Api();
-        this.isLoading = true;
-        const res = api.getData('/home/logout',{});
-       
-            this.isLoading = false;
-            if(res.data.status == 200)
-            {
-                this.$router.push({name: 'login'});
-            }
-            else if(res.data.status == 401)
-            {
-                this.$router.push({name: 'login'});
-            }
-            else 
-            {
-                this.$notify({
-                        group: 'notify',
-                        title: 'Mind Refreshing?',
-                        type: 'error',
-                        text: "Cannot logout at this time. Ugh! This sucks!",
-                        duration: 10000
-                    })
-            } 
-       
-    },
     selectAll()
     {
-        console.log("ALL SELECTED", this.allSelected);
+        //console.log("ALL SELECTED", this.allSelected);
         this.checkedFiles = [];
         this.checkedDirs = [];
         if(!this.allSelected)
@@ -507,9 +609,6 @@ export default {
   /* overflow:auto; */
   
 }
-button {
-  margin-right: 5px;
-}
 .delete{
     position: inherit;
     margin-right: 10px;
@@ -530,11 +629,9 @@ h4{
 }
 .data
 {
-    font-size: 22px;
-    
+    font-size: 22px; 
     border-top: none !important;
-    white-space: nowrap;
-    
+    white-space: nowrap;  
 }
 a {
   text-decoration: none;
@@ -544,13 +641,22 @@ a {
   padding: 5px;
   text-align: center;
 }
-
-.userOptions
-{
-    float:right;
-    width:100px;
-   
+.searchBar{
+    position: relative;
+    top:20px;
 }
+.main-container{
+    padding-right: 0px;
+    padding-left: 0px;
+    margin-right: 0px;
+    margin-left: 0px;
+}
+.drop.over
+{
+	border-color: #aaa;
+	background: #ccc;
+}
+
 </style>
 
 

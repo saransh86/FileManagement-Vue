@@ -63,6 +63,20 @@ export class Api
         })
     }
 
+    getUsers(endpoint)
+    {
+        return new Promise(async(resolve, reject) => {
+            try{
+                const res = await axios.get(this.url + endpoint);
+                resolve(res);
+            }
+            catch(e)
+            {
+                reject(e);
+            }
+        })
+    }
+
     // post()
     // {
 

@@ -8,6 +8,8 @@ import login from './components/login'
 import directory from './components/directory'
 import home from './components/home'
 import myProfile from './components/myProfile'
+import admin from './components/admin'
+import impersonation from './components/impersonation'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -37,6 +39,16 @@ const routes = [
     name: 'home',
     component: home
    },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: admin
+  },
+  {
+    path: '/impersonation',
+    name: 'impersonation',
+    component: impersonation
+  },
   {
     path:'/myProfile',
     name: 'myProfile',

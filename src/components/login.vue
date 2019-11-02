@@ -12,6 +12,7 @@
                 <notifications group ="register" position="top center"/>
                 <notifications group ="login" position="top center"/>
                 <div class='login-container'>
+                    
                     <div class='input-container'>
                         <input type="username" id="username" v-model="username" name="username" class="input-group-text col-11" placeholder="Username" required>
                     </div>
@@ -30,6 +31,40 @@
                         <a id="register" href='#' v-b-modal.registerModal> Create an account </a>
                     </div>
                 </div>
+                <!-- <b-container class="login-container">
+                    <b-row >
+                         <b-col cols="2">
+                                    <font-awesome-icon icon="user" size="2x" class="input-container"></font-awesome-icon>
+                                </b-col>
+                        <b-col cols=10 class="input-container">
+                            <input type="username" id="username" v-model="username" name="username" class="input-group-text" placeholder="Username" required>
+                        </b-col>
+                    </b-row>
+                    <b-row align-h="center">
+                         <b-col cols="2">
+                                    <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
+                                </b-col>
+                        <b-col cols=10 class="input-container">
+                            <input type="password" id="password" v-model="password" name="password"  class="input-group-text" placeholder="Password" required>
+                        </b-col>
+                    </b-row>
+                    <b-row align-h="center">
+                        <b-col cols="auto" class="input-container">
+                            <a id='forgotPassword' href='#' v-b-modal.forgetPassword>Forgot Password? </a>
+                        </b-col>
+                    </b-row>
+                    <b-row >
+                        <b-col cols=12 class="input-container">
+                           <button id="submitLogin" type="button" v-on:click="handleLogin" class="btn btn-primary btn-block"> Login </button>
+                        </b-col>
+                    </b-row>
+                    <b-row >
+                        <b-col cols=12 class="input-container">
+                           <span>Not Registered ? </span>
+                        <a id="register" href='#' v-b-modal.registerModal> Create an account </a>
+                        </b-col>
+                    </b-row>
+                </b-container> -->
                
             </div>    
        
@@ -183,7 +218,6 @@ export default {
                 let res = await api.postData("/authenticate", {username: this.username, password: this.password});
                 setTimeout(() => {
                     this.isLoading = false;
-                    console.log(res);
                     if(res.data.status == 300)
                     {
                         console.log("Notify Error!");
@@ -201,7 +235,14 @@ export default {
                     }
                     else if( res.data.status == 200)
                     {
-                        this.$router.push({name: 'home'});
+                        if(!res.data.isAdmin)
+                        {
+                            this.$router.push({name: 'home'});
+                        }
+                        else
+                        {
+                            this.$router.push({name: 'admin'});
+                        }
                     }
                 }, 2000); 
             }

@@ -4,56 +4,55 @@
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
         <notifications group ="notify" position="top center"/>
-        <div class="userOptions">
-            <b-dropdown class="m-md-2" variant="light">
-                <template slot="button-content">
-                    <font-awesome-icon icon="user-circle" size="3x"></font-awesome-icon>     
-                </template>
-                <b-dropdown-item v-bind:href="url + 'myProfile'">
-                    <font-awesome-icon icon="user"></font-awesome-icon>
-                    <span class="dropdown-text" > My Profile </span> 
-                </b-dropdown-item>
-                <b-dropdown-item href="/logout">
-                    <font-awesome-icon icon="sign-out-alt"></font-awesome-icon>
-                    <span class="dropdown-text" v-on:click="signOut"> Sign Out </span>
-                </b-dropdown-item>
-            </b-dropdown>
-        </div>
-        <h4>
-            <a :href="url + '/welcome'"> Home > </a>
-            <span>My Profile</span>
-        </h4>
         <div class="user-profile">
-            <b-container>
-                <b-row>
-                    <b-col cols="2">
+            <b-container class="main-container">
+                <b-row align-h="between">
+                    <b-col cols="auto">
+                        <div v-if="!isAdmin">
+                            <h4>
+                                <a :href="url + '/welcome'"> Home > </a>
+                                <span>My Profile</span>
+                            </h4>
+                        </div>
+                        <div v-else-if="isAdmin">
+                            <h4>
+                                <a :href="url + 'admin'"> Home > </a>
+                                <span>My Profile</span>
+                            </h4>
+                        </div>
+                    </b-col>
+                    <b-col cols="auto">
+                        <userOptions/>
+                    </b-col>
+                </b-row>
+                <b-row align-h="center">
+                    <b-col cols="auto" md=1>
                         <font-awesome-icon icon="user" size="2x" class="input-container"></font-awesome-icon>
                     </b-col>
-                    <b-col align-self="center" cols="10">
+                    <b-col cols="auto" md=4>
                         <b-form-group :state="usernameState" :invalid-feedback="invalidFeedbackUsername" class="input-container">
-                            <b-form-input id="registerUsername" v-model="username" :state="usernameState" required  class="input-group-text col-10"> </b-form-input>
+                            <b-form-input id="registerUsername" v-model="username" :state="usernameState" required  class="input-group-text "> </b-form-input>
                             </b-form-group>
                     </b-col>
                 </b-row>
 
-                <b-row>
-                    <b-col cols="2">
+                <b-row align-h="center">
+                    <b-col cols="auto" md=1>
                         <font-awesome-icon icon="envelope" size="2x" class="input-container"></font-awesome-icon>
                     </b-col>
-                    <b-col align-self="center" cols="10">
+                    <b-col cols="auto" md=4>
                         <b-form-group :state="emailState" :invalid-feedback="invalidFeedbackEmail" class="input-container">
-                            <b-form-input id="registerEmail" v-model="email" :state="emailState" required class="input-group-text col-10"> </b-form-input>
+                            <b-form-input id="registerEmail" v-model="email" :state="emailState" required class="input-group-text "> </b-form-input>
                         </b-form-group>
                     </b-col>
                 </b-row>
 
-                <b-row>
-                    <b-col cols="2">
-                        <span> </span>
+                <b-row align-h="center">
+                    <b-col cols="auto" md=1>   
                     </b-col>
-                    <b-col align-self="center" cols="10">
+                    <b-col cols="auto" md=4>
                         <b-form-group class="input-container">
-                            <button class="btn btn-primary col-10"  type="button"  v-on:click="updateProfile"> Update </button>
+                            <button class="btn btn-primary btn-block"  type="button"  v-on:click="updateProfile"> Update </button>
                         </b-form-group>
                     </b-col>
                 </b-row>
@@ -66,16 +65,20 @@
 import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
+import userOptions from './userProfileOptions';
 export default {
     name: 'myProfile',
     
     components: {
-        Loading
+        Loading,
+        userOptions
     },
     async mounted(){
         let api = new Api();
         this.isLoading = true;
         const res = await api.getData('/user/userProfile');
+        const resAdmin = await api.getData('/user/is_admin',{params: ''});
+        this.isAdmin = resAdmin.data.data;
         setTimeout(() => {
             this.isLoading = false;
             console.log("Got the user Profile", res);
@@ -117,7 +120,7 @@ export default {
             currentEmail: '',
             isLoading: false,
             fullPage: true,
-
+            isAdmin: null
         }
     },
     methods:
@@ -195,8 +198,9 @@ export default {
 }
 </script>
 <style scoped>
+
 .user-page{
-  position:fixed;
+  position: fixed;;
   right: 100px;
   top: 70px;
   left:100px;
@@ -206,9 +210,9 @@ export default {
 .user-profile{
   position: relative;
   background-color: white;
-  width: 50%;
+  /* width: 50%; */
   top: 100%;
-  margin: 0 auto;
+  margin: 0;
   font-size: medium;
 }
 .input-container {
@@ -222,11 +226,11 @@ a {
   text-decoration: none;
   color: black;
 }
-.userOptions
-{
-    float:right;
-    width:100px;
-   
+.main-container{
+    padding-right: 0px;
+    padding-left: 0px;
+    margin-right: 0px;
+    margin-left: 0px;
 }
 
 </style>
