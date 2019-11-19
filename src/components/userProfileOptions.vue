@@ -1,8 +1,8 @@
 <template>
     <div class="userOptions">
-            <b-dropdown class="m-2" variant="light">
+            <b-dropdown variant="success">
                 <template slot="button-content">
-                    <font-awesome-icon icon="user-circle" size="2x" class="icon"></font-awesome-icon>     
+                    <font-awesome-icon icon="user-circle" size="2x" class="icon"></font-awesome-icon>      
                 </template>
                 <b-dropdown-item v-bind:href="url + 'myProfile'">
                     <font-awesome-icon icon="user"></font-awesome-icon>
@@ -31,7 +31,7 @@ export default {
             let api = new Api();
             this.isLoading = true;
             const res = api.getData('/home/logout',{});
-       
+            console.log("LOGOUT", res);
             this.isLoading = false;
             if(res.data.status == 200)
             {
@@ -61,11 +61,8 @@ export default {
 <style scoped>
 .userOptions
 {
-    float:right;
-    width:100px;
-    margin-top: 0px;
-}
-.btn{
-    padding: 10px;
+    /* float: left; */
+    width:150px;
+    /* margin-top: 0px; */
 }
 </style>

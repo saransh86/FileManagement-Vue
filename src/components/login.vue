@@ -24,7 +24,7 @@
                         
                     </div>
                     <div class="input-container">
-                        <button id="submitLogin" type="button" v-on:click="handleLogin" class="btn btn-primary btn col-11"> Login </button>
+                        <button id="submitLogin" type="button" v-on:click="handleLogin" class="btn btn-success btn col-11"> Login </button>
                     </div>
                     <div class="input-container">
                         <span>Not Registered ? </span>
@@ -71,7 +71,7 @@
             
        
 
-        <b-modal id='registerModal' ref="modal" title="Register For Awesomeness!" @show="resetModalRegister" @hidden="resetModalRegister" @ok="handleRegister">
+        <b-modal id='registerModal' ref="modal" title="Register For Awesomeness!" @show="resetModalRegister" @hidden="resetModalRegister" @ok="handleRegister" ok-variant="success" cancel-variant="success">
             <form ref="form" @submit.stop.prevent="handleRegister">
                 
                     <b-container>
@@ -135,7 +135,7 @@
             </form>
         </b-modal>
 
-         <b-modal id='forgetPassword' ref="modal1" title="Forgot your Password? We got you!" @show="resetModal" @hidden="resetModal" @ok="handleForgotPassword">
+         <b-modal id='forgetPassword' ref="modal1" title="Forgot your Password? We got you!" @show="resetModal" @hidden="resetModal" @ok="handleForgotPassword" ok-variant="success" cancel-variant="success">
             <form ref="form1" @submit.stop.prevent="handleSubmitForgetPassword">
                 
                     <b-container>    

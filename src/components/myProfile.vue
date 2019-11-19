@@ -1,9 +1,13 @@
 <template>
+<div>
+    <notifications group ="notify" position="top center"/>
+    <navBar/>
     <div class="user-page">
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        <notifications group ="notify" position="top center"/>
+        
+        
         <div class="user-profile">
             <b-container class="main-container">
                 <b-row align-h="between">
@@ -20,9 +24,6 @@
                                 <span>My Profile</span>
                             </h4>
                         </div>
-                    </b-col>
-                    <b-col cols="auto">
-                        <userOptions/>
                     </b-col>
                 </b-row>
                 <b-row align-h="center">
@@ -46,18 +47,68 @@
                         </b-form-group>
                     </b-col>
                 </b-row>
+                <b-row align-h="center">
+                    <b-col cols="auto" md=1>
+                    </b-col>
 
+                    <b-col cols="auto" md=4>
+                        <b-form-group class="input-container">
+                            <button class="btn btn-success btn-block"  type="button"  v-b-modal.changePassword> Change Password </button>
+                        </b-form-group>
+                    </b-col>
+                </b-row>
                 <b-row align-h="center">
                     <b-col cols="auto" md=1>   
                     </b-col>
                     <b-col cols="auto" md=4>
                         <b-form-group class="input-container">
-                            <button class="btn btn-primary btn-block"  type="button"  v-on:click="updateProfile"> Update </button>
+                            <button class="btn btn-success btn-block"  type="button"  v-on:click="updateProfile"> Update </button>
                         </b-form-group>
                     </b-col>
                 </b-row>
             </b-container>
         </div>
+        <b-modal id='changePassword' ref="modal" title="Alright Lets do this!" @show="resetModal" @hidden="resetModal" @ok="handleChangePassword" ok-variant="success" cancel-variant="success">
+            <form ref="form" @submit.stop.prevent="handleChangePassword">
+                
+                    <b-container>    
+                        <b-row>
+                            <b-col cols="2">
+                                <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
+                            </b-col>
+                        <b-col align-self="center" cols="10">
+                            <b-form-group :state="currentPasswordState"  :invalid-feedback="invalidFeedbackCurrentPassword" class="input-container"> 
+                                <b-form-input id="currentPassword" type="password" v-model="currentPassword" :state="currentPasswordState"  required placeholder="Current Password" class="input-group-text"> </b-form-input>
+                             </b-form-group>
+                        </b-col>
+                        </b-row>
+
+                        <b-row>
+                            <b-col cols="2">
+                                <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
+                            </b-col>
+                            <b-col>
+                                <b-form-group :state="newPasswordState"  :invalid-feedback="invalidFeedbackNewPassword" class="input-container"> 
+                                    <b-form-input id="newPassword" type="password" v-model="newPassword" :state="newPasswordState"  required placeholder="New Password" class="input-group-text"> </b-form-input>
+                             </b-form-group> 
+                            </b-col>
+                        </b-row>
+
+                        <b-row>
+                            <b-col cols="2">
+                                <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
+                            </b-col>
+                            <b-col>
+                                <b-form-group :state="confirmNewPasswordState"  :invalid-feedback="invalidFeedbackConfirmNewPassword" class="input-container"> 
+                                    <b-form-input id="confirmNewPassword" type="password" v-model="confirmNewPassword" :state="confirmNewPasswordState"  required placeholder="Confirm New Password" class="input-group-text"> </b-form-input>
+                             </b-form-group> 
+                            </b-col>
+                        </b-row>
+                    </b-container>
+                
+            </form>
+        </b-modal>
+    </div>
     </div>
 </template>
 
@@ -65,12 +116,15 @@
 import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
+import lodash from 'lodash';
+import navBar from './navigationBar';
 import userOptions from './userProfileOptions';
 export default {
     name: 'myProfile',
     
     components: {
         Loading,
+        navBar,
         userOptions
     },
     async mounted(){
@@ -111,6 +165,19 @@ export default {
         return {
             url: "http://localhost:8080/#/",
             usernameState : null,
+
+            currentPassword: '',
+            currentPasswordState: null,
+            invalidFeedbackCurrentPassword: '',
+
+            newPassword: '',
+            newPasswordState: null,
+            invalidFeedbackNewPassword: '',
+
+            confirmNewPassword: '',
+            confirmNewPasswordState: null,
+            invalidFeedbackConfirmNewPassword: '',
+
             emailState: null,
             username : '',
             email: '',
@@ -125,6 +192,108 @@ export default {
     },
     methods:
     {
+        resetModal()
+        {
+            this.currentPassword= '',
+            this.currentPasswordState = null,
+            this.newPassword = '',
+            this.newPasswordState = null,
+            this.confirmNewPassword = '',
+            this.confirmNewPasswordState = null
+        },
+        async handleChangePassword(bvModalEvt)
+        {
+           
+            bvModalEvt.preventDefault();
+            let check = false;
+            if(this.currentPassword =='' || this.currentPassword.length <=3){
+                this.currentPasswordState = 'invalid';
+                if(this.currentPassword == '')
+                {
+                    this.invalidFeedbackCurrentPassword = "Empty Current Password.";
+                }
+                else
+                {
+                    this.invalidFeedbackCurrentPassword = "Almost there! Need password to be more that 4."
+                }
+                check = true;
+            }
+            else{
+                this.currentPasswordState = 'valid';
+            }
+            if(this.newPassword =='' || this.newPassword.length <=4){
+                this.newPasswordState = 'invalid';
+                if(this.newPassword == '')
+                {
+                    this.invalidFeedbackNewPassword = "Empty New Password.";
+                }
+                else
+                {
+                    this.invalidFeedbackNewPassword = "Almost there! Need password to be more that 4."
+                }
+                check = true;
+            }
+            else{
+                this.newPasswordState = 'valid';
+            }
+            if(this.confirmNewPassword =='' || this.confirmNewPassword.length <=4 || !(lodash.eq(this.newPassword, this.confirmNewPassword))){
+                this.confirmNewPasswordState = 'invalid';
+                if(this.confirmNewPassword == '')
+                {
+                    this.invalidFeedbackConfirmNewPassword = "Empty Confirm Password.";
+                }
+                else if(!lodash.eq(this.newPassword, this.confirmNewPassword)){
+                    this.invalidFeedbackConfirmNewPassword = "New Password and Confirm Password do not match!";
+                }
+                else if(this.confirmNewPassword.length <=4)
+                {
+                    this.invalidFeedbackConfirmNewPassword= "Almost there! Need password to be more that 4.";
+                }
+                check = true;
+            }
+            else{
+                this.confirmNewPasswordState = 'valid';
+            }
+
+            if(check)
+            {
+                return;
+            }
+            else{
+                 this.$nextTick(() => {
+                    this.$refs.modal.hide()
+                }) 
+                this.isLoading = true;
+                this.currentPasswordState = 'valid';
+                this.newPasswordState = 'valid';
+                this.confirmNewPasswordState = 'valid';
+                let api = new Api();
+                const res = await api.putData('/user/change_password', {newPassword: this.newPassword, currentPassword: this.currentPassword});
+                this.isLoading = false;
+                if(res.data.status == 300){
+                    this.$notify({
+                            group: 'notify',
+                            title: 'Profile Update',
+                            type: 'error',
+                            text: res.data.message,
+                            duration: 10000
+                        })
+                }
+                else if(res.data.status == 400){
+                    this.$router.push({name: 'login'});
+                }
+                else{
+                    this.$notify({
+                            group: 'notify',
+                            title: 'Password Updated!',
+                            type: 'success',
+                            text: res.data.message,
+                            duration: 10000
+                        })
+                }
+               
+            }
+        },
         async updateProfile()
         {
             if(this.currentUsername == this.username && this.currentEmail == this.email)
@@ -202,7 +371,7 @@ export default {
 .user-page{
   position: fixed;;
   right: 100px;
-  top: 70px;
+  top: 60px;
   left:100px;
   padding: 20px;
   background-color: white;

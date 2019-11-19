@@ -1,4 +1,6 @@
 <template>
+<div>
+    <navBar/>
 <div class="index-page">
      <div class="vld-parent">
         <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
@@ -9,9 +11,9 @@
             <b-col cols="auto">
                 <h2> Welcome Admin </h2>
             </b-col>
-            <b-col cols="auto">
+            <!-- <b-col cols="auto">
                  <userOptions/>
-            </b-col>
+            </b-col> -->
         </b-row>
         <b-row align-h="start">
             <b-col cols="12">
@@ -52,6 +54,7 @@
                 <span class="data" > {{user}} </span>
             </div>
         </div>
+    </div>
 </div>
 </template>
 <script>
@@ -59,7 +62,7 @@ import 'vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
 import lodash from 'lodash';
-import userOptions from './userProfileOptions'
+import navBar from './navigationBar';
 export default {
     name: 'admin',
     data() {
@@ -111,7 +114,7 @@ export default {
     },
     components: {
         Loading,
-        userOptions
+        navBar
     },
     methods: {
 

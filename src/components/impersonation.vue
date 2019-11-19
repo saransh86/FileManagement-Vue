@@ -1,10 +1,12 @@
 <template>
+    <div>
+    <navBar/>
     <div class="index-page">
+        
          <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
         <notifications group ="notify" position="top center"/>
-         <userOptions/>
         <h2> Welcome Admin </h2>
         <div class="cards">
             <b-card title="Card Title" no-body>
@@ -23,7 +25,7 @@
         </b-nav> -->
         <div class="searchBar">
             <b-container>
-                <b-row>
+                <b-row align-h="center">
                     <b-col cols="4">
                         <vue-select placeholder="Search Users" @input="setSelected" :clearable="false" v-model="selected" :options="allUsers" ></vue-select>
                     </b-col>
@@ -39,12 +41,13 @@
             </div>
         </div>
     </div>
+    </div>
 </template>
 
 <script>
 import 'vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
-import userOptions from './userProfileOptions'
+import navBar from './navigationBar';
 import VueSelect from 'vue-select';
 import {Api} from '../api';
 import 'vue-select/dist/vue-select.css';
@@ -95,7 +98,7 @@ export default {
     },
     components:{
         Loading,
-        userOptions,
+        navBar,
         VueSelect
     },
     methods: {

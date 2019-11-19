@@ -1,25 +1,17 @@
 <template>
-<div class="searchBar">
-<b-container>
-    <b-row align-h="center">
-        <b-col cols="4">
-            <vue-select placeholder="Search Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="allFiles" ></vue-select>
-        </b-col>
-    </b-row>
-</b-container>
+<div>
+    <notifications group ="notify" position="top center"/>
+    <navigate :key="componentkey"/>
     <div class="index-page">
         
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        <notifications group ="notify" position="top right"/>
+       
             <b-container class="main-container">
                 <b-row align-h="between">
                     <b-col cols=auto>
                         <h2>Welcome {{username}} </h2>
-                    </b-col>
-                    <b-col cols=auto>
-                        <userOptions/>
                     </b-col>
                 </b-row>
                 <b-row align-h="start">
@@ -29,18 +21,18 @@
                 </b-row>
                 <b-row align-h="start">
                     <b-col cols=auto>
-                        <button class="btn btn-primary" id="submitCreateDirectory" type="button"  v-b-modal.createDirectory> Create </button>
+                        <button class="btn btn-success" id="submitCreateDirectory" type="button" v-b-modal.createDirectory> Create </button>
                     </b-col>
                         
                     <b-col cols=auto>
-                         <button class="btn btn-primary" id="submitUploadFile" type="button" @click="$refs.file.click()"> Upload </button>
+                         <button class="btn btn-success" id="submitUploadFile" type="button" @click="$refs.file.click()"> Upload </button>
                          <input type="file" hidden ref="file" name="file_to_upload" multiple v-on:change="handleFileUpload" v-on:click="resetUpload">
                     </b-col>
                     <b-col cols=auto>
-                        <button class="btn btn-primary" id="submitDelete" type="button" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</button>
+                        <button class="btn btn-success" id="submitDelete" type="button" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</button>
                     </b-col>
                     <b-col cols="auto">
-                        <button class="btn btn-primary" id="submitMove" type="button" :disabled="checkedFiles.length==0" @click="showMoveFileModal"> Move</button>
+                        <button class="btn btn-success" id="submitMove" type="button" :disabled="checkedFiles.length==0" @click="showMoveFileModal"> Move</button>
                     </b-col>
 
                 </b-row>
@@ -69,7 +61,7 @@
             </div>
         </div>
 
-         <b-modal id='createDirectory' ref="modal" title="Give a creative name to the directory!" @show="resetModal" @hidden="resetModal" @ok="handleCreateDirectory">
+         <b-modal id='createDirectory' ref="modal" title="Give a creative name to the directory!" @show="resetModal" @hidden="resetModal" @ok="handleCreateDirectory" ok-variant="success" cancel-variant="success">
             <form ref="form" @submit.stop.prevent="handleSubmitForgetPassword">
                 
                     <b-container>    
@@ -88,7 +80,7 @@
             </form>
         </b-modal>
     </div>
-     <b-modal id='moveFileToDirectory' ref="moveModal" title="Move File To Directory" @show="resetModal" @hidden="resetModal" @ok="moveFileToDirectory">
+     <b-modal id='moveFileToDirectory' ref="moveModal" title="Move File To Directory" @show="resetModal" @hidden="resetModal" @ok="moveFileToDirectory" ok-variant="success" cancel-variant="success">
         <form ref="form1" @submit.stop.prevent="moveFileToDirectory">
             <b-container>    
                 <b-row>
@@ -115,7 +107,7 @@ import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
 import lodash from 'lodash';
-import userOptions from './userProfileOptions';
+import navigate from './navigationBar';
 import VueSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 export default {
@@ -127,9 +119,9 @@ export default {
             username: null,
             directories: [],
             files:[],
-            selected :null,
+           
             selectedDir : null,
-            allFiles: [],
+            
             allDirectories: [],
 
             directoryName : '',
@@ -142,6 +134,7 @@ export default {
 
             isLoading: false,
             fullPage: true,
+            componentkey: 0,
 
            url: "http://localhost:8080/#/"
         }
@@ -152,27 +145,31 @@ export default {
     components: {
         Loading,
         VueSelect,
-        userOptions
+        navigate
     },
     methods:{
+        async forceUpdate(){
+            this.componentkey += 1;
+            console.log("Key:" , this.componentkey);
+        },
         async init(){
             this.path = 'root/home';
             let api = new Api();
             const welcomePromise =  api.getData('/home/welcome',  {path: this.path})
-            const allFilesPromise = api.getData('/user/get_files',{});
+           
             const allDirectoriesPromise = api.getData('/user/get_directories', {});
-            const [res, allFiles, allDirectories] = await Promise.all([welcomePromise, allFilesPromise, allDirectoriesPromise]);
+            const [res, allDirectories] = await Promise.all([welcomePromise, allDirectoriesPromise]);
            // console.log("Res",res);
-            if(res.data.status == 200 && allFiles.data.status == 200 && allDirectories.data.status == 200)
+            if(res.data.status == 200 && allDirectories.data.status == 200)
             {
                 //console.log("Got the data", allFiles.data.data);
                 this.username = res.data.data.username
                 this.directories = res.data.data.directories;
                 this.files = res.data.data.files;
-                this.allFiles = allFiles.data.data;
+                
                 this.allDirectories = allDirectories.data.data;
             }
-            else if (res.data.status == 401 || allFiles.data.status == 401 || allDirectories.data.status == 401)
+            else if (res.data.status == 401 || allDirectories.data.status == 401)
             {
                 this.$router.push({name: 'login'});
             }
@@ -253,11 +250,11 @@ export default {
             this.directoryName = ''
             this.directoryState = null
         },
-        setSelected(value) {
-            //console.log("On change", value);
-            location.href = value.path;
-            //  trigger a mutation, or dispatch an action  
-        },
+        // setSelected(value) {
+        //     //console.log("On change", value);
+        //     location.href = value.path;
+        //     //  trigger a mutation, or dispatch an action  
+        // },
         async handleFileUpload(e)
         {
              
@@ -304,7 +301,7 @@ export default {
                             let obj = {fileName: '', path: ''};
                             obj.fileName = filesToUpload[i].name;
                             obj.path = "/#/" + currentpath.join('/');
-                            this.allFiles.push(obj);
+                            //this.allFiles.push(obj);
                         }
                     
                         this.$notify({
@@ -341,7 +338,8 @@ export default {
                         })
                     }
                  
-                }  
+                }
+                await this.forceUpdate();  
             }, 1000);
              
         },
@@ -528,7 +526,9 @@ export default {
                     }
                     this.checkedFiles = [];
                 }
+                await this.forceUpdate();
             }, 1000);
+            
             this.allSelected = false;
             //})
 
@@ -602,7 +602,7 @@ export default {
 .index-page{
   position:fixed;
   right: 100px;
-  top: 70px;
+  top: 60px;
   left:100px;
   padding: 20px;
   background-color: white;
@@ -642,8 +642,11 @@ a {
   text-align: center;
 }
 .searchBar{
-    position: relative;
-    top:20px;
+    /* position: relative;
+    top:20px; */
+    width: 300px;
+    background: white;
+    margin-right: 10px;
 }
 .main-container{
     padding-right: 0px;
@@ -656,7 +659,9 @@ a {
 	border-color: #aaa;
 	background: #ccc;
 }
-
+.navbar-brand{
+    margin-left: 106px;
+}
 </style>
 
 

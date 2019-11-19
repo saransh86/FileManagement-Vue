@@ -1,17 +1,12 @@
 <template>
-<div class="searchBar">
-<b-container>
-    <b-row align-h="center">
-        <b-col cols="4">
-            <vue-select placeholder="Search Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="allFiles" ></vue-select>
-        </b-col>
-    </b-row>
-</b-container>
-  <div class="index-page">
+<div>
+    <notifications group ="notify" position="top center"/>
+    <navBar :key="componentKey"/>
+    <div class="index-page">
     <div class="vld-parent">
         <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
     </div>
-    <notifications group ="notify" position="top right"/>
+    
     <b-container class="main-container">
         <b-row align-h="between">
             <b-col cols="auto">
@@ -22,23 +17,20 @@
                     </span>
                 </h4>
             </b-col> 
-            <b-col cols=auto>
-                <userOptions/>
-            </b-col>
         </b-row>
         <b-row align-h="start">
             <b-col cols="auto">
-                <button class="btn btn-primary" id="submitCreateDirectory" type="button"  v-b-modal.createDirectory> Create </button>
+                <button class="btn btn-success" id="submitCreateDirectory" type="button"  v-b-modal.createDirectory> Create </button>
             </b-col>
             <b-col cols="auto">
-                <button class="btn btn-primary" id="submitUploadFile" type="button" @click="$refs.file.click()"> Upload </button>
+                <button class="btn btn-success" id="submitUploadFile" type="button" @click="$refs.file.click()"> Upload </button>
             </b-col>
             <b-col cols="auto">
-                <button class="btn btn-primary" id="submitDelete" type="button" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</button>
+                <button class="btn btn-success" id="submitDelete" type="button" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</button>
                 <input type="file" hidden ref="file" name="file_to_upload" multiple v-on:change="handleFileUpload" v-on:click="resetUpload">
             </b-col>
             <b-col cols="auto">
-                <button class="btn btn-primary" id="submitMove" type="button" :disabled="checkedFiles.length==0" @click="showMoveFileModal"> Move</button>
+                <button class="btn btn-success" id="submitMove" type="button" :disabled="checkedFiles.length==0" @click="showMoveFileModal"> Move</button>
             </b-col>
         </b-row>
         <b-row align-h="start">
@@ -68,7 +60,7 @@
         </div>
     
 
-     <b-modal id='createDirectory' ref="modal" title="Give a creative name to the directory!" @show="resetModal" @hidden="resetModal" @ok="handleCreateDirectory">
+     <b-modal id='createDirectory' ref="modal" title="Give a creative name to the directory!" @show="resetModal" @hidden="resetModal" @ok="handleCreateDirectory" ok-variant="success" cancel-variant="success">
             <form ref="form" @submit.stop.prevent="handleSubmitForgetPassword">
                 
                     <b-container>    
@@ -87,7 +79,7 @@
             </form>
         </b-modal>
 
-         <b-modal id='moveFileToDirectory' ref="moveModal" title="Move File To Directory" @show="resetModal" @hidden="resetModal" @ok="moveFileToDirectory">
+         <b-modal id='moveFileToDirectory' ref="moveModal" title="Move File To Directory" @show="resetModal" @hidden="resetModal" @ok="moveFileToDirectory" ok-variant="success" cancel-variant="success">
         <form ref="form1" @submit.stop.prevent="moveFileToDirectory">
             <b-container>    
                 <b-row>
@@ -111,7 +103,7 @@ import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
 import lodash from 'lodash';
 import VueSelect from 'vue-select';
-import userOptions from './userProfileOptions'
+import navBar from './navigationBar';
 import 'vue-select/dist/vue-select.css';
 export default {
     
@@ -120,40 +112,43 @@ async beforeRouteEnter(to, from, next){
       /**
        * check to see if the directory exists
        */
-        if(from.name != "myProfile")
-        {
-        const basePath = "root/home";
-        let dirs = to.path.split(/\//);
-        let toPaths = [];
-        let path;
-        if(dirs.length >2)
-        {
-            toPaths = to.path.split(/\//);
-            toPaths.pop();
-            path = basePath + toPaths.join('/');  
-        }
-        else
-        {
-            path = basePath;
-        }
-        let api = new Api();
-        const res = await api.getData('/file/is_directory',{path: path, directory: dirs[dirs.length - 1]});
-        console.log("Path",path);
-        console.log("Directory",dirs[dirs.length - 1]);
-        console.log("Response", res.data.message);
-        console.log("Status", res.data.status);
-        if(res.data.status == 200)
-        {
-            next();
-        }
-        else{
-            next({name: 'home'});
-        }
-    }
-    else
-    {
-        next({name: 'home'});
-    }
+        // if(from.name != "myProfile")
+        // {
+            
+            const basePath = "root/home";
+            let dirs = to.path.split(/\//);
+            let toPaths = [];
+            let path;
+            if(dirs.length >2)
+            {
+                toPaths = to.path.split(/\//);
+                toPaths.pop();
+                path = basePath + toPaths.join('/');  
+            }
+            else
+            {
+                path = basePath;
+            }
+            let api = new Api();
+            const res = await api.getData('/file/is_directory',{path: path, directory: dirs[dirs.length - 1]});
+            console.log("Path",path);
+            console.log("Directory",dirs[dirs.length - 1]);
+            console.log("Response", res.data.message);
+            console.log("Status", res.data.status);
+            if(res.data.status == 200)
+            {
+                next();
+            }
+            else
+            {
+                next({name: 'home'});
+            }
+        // }   
+        // else
+        // {   
+        //     console.log("Going to", to.path);
+        //     next({name: 'home'});
+        // }
     },
 async beforeRouteUpdate(to, from, next) {
     
@@ -209,12 +204,13 @@ async beforeRouteUpdate(to, from, next) {
         allSelected : false,
         isLoading: false,
         fullPage: true,
+        componentKey: 0,
     };
   },
   components: {
         Loading,
         VueSelect,
-        userOptions
+        navBar
     },
   async mounted() {
     
@@ -223,6 +219,9 @@ async beforeRouteUpdate(to, from, next) {
    
   },
   methods:{
+        async forceUpdate(){
+            this.componentKey += 1;
+        },
         async init(){
             let directory = window.location.href.split("/");
             directory.splice(0, 4);
@@ -252,20 +251,19 @@ async beforeRouteUpdate(to, from, next) {
             let api = new Api();
             // const result = await api.getData('/home/welcome', {path: this.path});
             const welcomePromise =  api.getData('/home/welcome',  {path: this.path})
-            const allFilesPromise = api.getData('/user/get_files',{});
+            //const allFilesPromise = api.getData('/user/get_files',{});
             const allDirectoriesPromise = api.getData('/user/get_directories', {});
-            const [result, allFiles, allDirectories] = await Promise.all([welcomePromise, allFilesPromise, allDirectoriesPromise]);
+            const [result, allDirectories] = await Promise.all([welcomePromise, allDirectoriesPromise]);
    
-            if(result.data.status == 200 && allFiles.data.status == 200 && allDirectories.data.status==200)
+            if(result.data.status == 200  && allDirectories.data.status==200)
             {
                 console.log("Got the data", res);
                 
                 this.directories = result.data.data.directories;
                 this.files = result.data.data.files;
-                this.allFiles = allFiles.data.data;
                 this.allDirectories = allDirectories.data.data;
             }
-            else if(result.data.status == 401 || allFiles.data.status==401 || allDirectories.data.status == 401)
+            else if(result.data.status == 401 || allDirectories.data.status == 401)
             {
                 this.$router.push({name: 'login'});
             }
@@ -345,11 +343,6 @@ async beforeRouteUpdate(to, from, next) {
         {
             this.dirName = ''
             this.dirState = null
-        },
-        setSelected(value) {
-            console.log("On change", value);
-            location.href = value.path;
-            //  trigger a mutation, or dispatch an action  
         },
         async handleFileUpload(e)
         {
@@ -433,6 +426,7 @@ async beforeRouteUpdate(to, from, next) {
                     }
                  
                 }
+                await this.forceUpdate();
              }, 1000);
         },
         async handleCreateDirectory(bvModalEvt)
@@ -613,6 +607,7 @@ async beforeRouteUpdate(to, from, next) {
                     }
                     this.checkedFiles = [];
                 }
+                await this.forceUpdate();
             }, 1000);
             
             this.allSelected = false;
@@ -682,7 +677,7 @@ async beforeRouteUpdate(to, from, next) {
 .index-page{
   position:fixed;
   right: 100px;
-  top: 70px;
+  top: 60px;
   left:100px;
   padding: 20px;
   background-color: white;
@@ -723,14 +718,18 @@ a {
   padding: 5px;
   text-align: center;
 }
-.searchBar{
-    position: relative;
-    top:20px;
-}
 .main-container{
     padding-right: 0px;
     padding-left: 0px;
     margin-right: 0px;
     margin-left: 0px;
+}
+.searchBar{
+    width: 300px;
+    background: white;
+    margin-right: 10px;
+}
+.navbar-brand{
+    margin-left: 106px;
 }
 </style>
