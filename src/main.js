@@ -1,4 +1,7 @@
 import Vue from 'vue'
+import VueMaterial from 'vue-material'
+import 'vue-material/dist/vue-material.min.css'
+import 'vue-material/dist/theme/default.css'
 
 import BootstrapVue from 'bootstrap-vue'
 import VueRouter from 'vue-router'
@@ -24,6 +27,7 @@ Vue.use(BootstrapVue)
 Vue.use(VueRouter)
 Vue.use(Notifications)
 Vue.use(VueCookies)
+Vue.use(VueMaterial)
 //Vue.use(jwtDecode);
 Vue.config.productionTip = false
 

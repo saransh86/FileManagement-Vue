@@ -6,9 +6,54 @@
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        
-        
         <div class="user-profile">
+        <form novalidate class="md-layout-item" @submit.prevent="validateProfile">
+            <md-card>
+                <md-card-header>
+                    <div v-if="!isAdmin">
+                        <a :href="url + '/welcome'"> <span class="md-title"> Home >  </span></a>
+                        <span class="md-title">My Profile</span>
+                    </div>
+                    <div v-else-if="isAdmin">
+                        <a :href="url + 'admin'"> <span class="md-title">Home > </span> </a>
+                        <span class="md-title">My Profile</span>
+                    </div>
+                    </md-card-header>
+                    <md-card-content>
+                        <div class="md-layout-item md-size-25">
+                            <md-field :class="getValidationClass('username')">
+                                <label for="username">Username</label>
+                                <md-input id="registerUsername" v-model="form.username"> </md-input>
+                                <span class="md-error" v-if="!$v.form.username.required">The username is required</span>
+                                <span class="md-error" v-else-if="!$v.form.username.minlength">Minimum length of username should be 5</span>
+                            </md-field>
+                        </div>
+
+                        <div class="md-layout-item md-size-25">
+                            <md-field :class="getValidationClass('username')">
+                                <label for="email"> Email </label>
+                                <md-input id="registerEmail" v-model="form.email"> </md-input>
+                                <span class="md-error" v-if="!$v.form.email.required">The email is required.</span>
+                                <span class="md-error" v-else-if="!$v.form.email.email">Invalid email.</span>
+                            </md-field>
+                        </div>
+
+                        
+
+                        <div class="md-layout-item md-size-25">
+                            <md-button id="changePassword" class="md-layout-item md-primary md-raised md-size-100" @click="changePasswordModal= true">Change Password</md-button>
+                        </div>
+
+                        <div class="md-layout-item md-size-25">
+                            <md-button type="submit" class="md-layout-item md-primary md-raised md-size-100">Update Profile</md-button>
+                        </div>
+                    </md-card-content>
+            
+                </md-card>
+        </form>
+        </div>
+
+        <!-- <div class="user-profile">
             <b-container class="main-container">
                 <b-row align-h="between">
                     <b-col cols="auto">
@@ -67,8 +112,8 @@
                     </b-col>
                 </b-row>
             </b-container>
-        </div>
-        <b-modal id='changePassword' ref="modal" title="Alright Lets do this!" @show="resetModal" @hidden="resetModal" @ok="handleChangePassword" ok-variant="success" cancel-variant="success">
+        </div> -->
+        <!-- <b-modal id='changePassword' ref="modal" title="Alright Lets do this!" @show="resetModal" @hidden="resetModal" @ok="handleChangePassword" ok-variant="success" cancel-variant="success">
             <form ref="form" @submit.stop.prevent="handleChangePassword">
                 
                     <b-container>    
@@ -107,7 +152,48 @@
                     </b-container>
                 
             </form>
-        </b-modal>
+        </b-modal> -->
+
+        <!--Modal for change password-->
+        <md-dialog :md-active.sync="changePasswordModal" v-on:md-closed="clearUpdatePasswordForm">
+            <md-dialog-title> Change Password </md-dialog-title>
+            <form novalidate class="md-layout-item md-size-100 md-medium-size-100" @submit.prevent="validateChangePassword">
+                <md-dialog-content>
+                    <div class="md-layout md-gutter">
+                        <div class="md-layout-item md-small-size-100">
+                            <md-field :class="getValidationClass('currentPassword')">
+                                <label for="currentPassword" > Current Password </label>
+                                <md-input name="currentPassword" type="password" id="currentPassword" v-model="form.currentPassword" :disabled="sending"> </md-input>
+                                <span class="md-error" v-if="!$v.form.currentPassword.required">The current password is required.</span>
+                                <span class="md-error" v-else-if="!$v.form.currentPassword.minLength">Minimum password length should be 6.</span>
+                            </md-field>
+                        </div>
+                    </div>
+
+                    <div class="md-layout-item md-gutter">
+                        <md-field :class="getValidationClass('newPassword')">
+                            <label for="newPassword" > New Password </label>
+                            <md-input name="newPassword" type="password" id="newPassword" v-model="form.newPassword" :disabled="sending"> </md-input>
+                            <span class="md-error" v-if="!$v.form.newPassword.required">The new password is required.</span>
+                            <span class="md-error" v-else-if="!$v.form.newPassword.minLength">Minimum password length should be 6.</span>
+                        </md-field>
+                    </div>
+
+                    <div class="md-layout-item md-gutter"> 
+                        <md-field :class="getValidationClass('confirmNewPassword')">
+                            <label for="confirmNewPassword"> Confirm New Password</label>
+                            <md-input name="confirmNewPassword" type="password" id="confirmNewPassword" v-model="form.confirmNewPassword" :disable="sending"/>
+                            <span class="md-error" v-if="!$v.form.confirmNewPassword.sameAsPassword">Password and Confirm Password do not match.</span> 
+                        </md-field>
+                    </div>
+                 </md-dialog-content>
+                  <md-dialog-actions >
+                    <md-button class="md-primary" @click="changePasswordModal = false">Close</md-button>
+                    <md-button type="submit" class="md-primary" :disabled="sending" >Save</md-button>
+                </md-dialog-actions>
+            </form>
+        </md-dialog>
+
     </div>
     </div>
 </template>
@@ -119,9 +205,17 @@ import {Api} from '../api';
 import lodash from 'lodash';
 import navBar from './navigationBar';
 import userOptions from './userProfileOptions';
+import { validationMixin } from 'vuelidate';
+import {sameAs} from 'vuelidate/lib/validators';
+import {
+    required,
+    email,
+    minLength,
+    maxLength
+  } from 'vuelidate/lib/validators'
 export default {
     name: 'myProfile',
-    
+    mixins: [validationMixin],
     components: {
         Loading,
         navBar,
@@ -138,10 +232,10 @@ export default {
             console.log("Got the user Profile", res);
             if(res.data.status == 200)
             {
-                this.username = res.data.message.username;
-                this.email = res.data.message.email;
-                this.currentUsername = this.username;
-                this.currentEmail = this.email;
+                this.form.username = res.data.message.username;
+                this.form.email = res.data.message.email;
+                this.checkUsername = res.data.message.username;
+                this.checkEmail = res.data.message.email;
             }
             else if(res.data.status == 401)
             {
@@ -164,34 +258,104 @@ export default {
     {
         return {
             url: "http://localhost:8080/#/",
-            usernameState : null,
+            //usernameState : null,
 
-            currentPassword: '',
-            currentPasswordState: null,
-            invalidFeedbackCurrentPassword: '',
+            // currentPassword: '',
+            // currentPasswordState: null,
+            // invalidFeedbackCurrentPassword: '',
 
-            newPassword: '',
-            newPasswordState: null,
-            invalidFeedbackNewPassword: '',
+            // newPassword: '',
+            // newPasswordState: null,
+            // invalidFeedbackNewPassword: '',
 
-            confirmNewPassword: '',
-            confirmNewPasswordState: null,
-            invalidFeedbackConfirmNewPassword: '',
+            // confirmNewPassword: '',
+            // confirmNewPasswordState: null,
+            // invalidFeedbackConfirmNewPassword: '',
 
-            emailState: null,
-            username : '',
-            email: '',
-            invalidFeedbackEmail: '',
-            invalidFeedbackUsername: '',
-            currentUsername: '',
-            currentEmail: '',
+            // emailState: null,
+            // username : '',
+            // email: '',
+            // invalidFeedbackEmail: '',
+            // invalidFeedbackUsername: '',
+            // currentUsername: '',
+            // currentEmail: '',
+            checkUsername: null,
+            checkEmail: null,
             isLoading: false,
             fullPage: true,
-            isAdmin: null
+            isAdmin: null,
+            changePasswordModal : false,
+            form :{
+                currentPassword: null,
+                newPassword:null,
+                confirmNewPassword: null,
+                username: null,
+                email: null
+            },
+            sending : false,
+
+        }
+    },
+    validations: {
+        form: {
+            currentPassword:{
+                required,
+                minLength: minLength(6)
+            },
+            newPassword: {
+                required,
+                minLength: minLength(6)
+            },
+            confirmNewPassword: {
+                 sameAsPassword : sameAs('newPassword')
+            },
+            username:{
+                required,
+                minLength: minLength(5)  
+            },
+            email:{
+                required,
+                email
+            }
+
         }
     },
     methods:
     {
+        getValidationClass (fieldName) {
+        const field = this.$v.form[fieldName]
+
+        if (field) {
+            return {
+                'md-invalid': field.$invalid && field.$dirty
+            }
+            }
+        },
+        clearUpdatePasswordForm(){
+            this.form.currentPassword = null;
+            this.form.newPassword = null;
+            this.form.confirmNewPassword = null;
+
+            this.$v.form.currentPassword.$reset();
+            this.$v.form.newPassword.$reset();
+            this.$v.form.currentPassword.$reset();
+        },
+         validateChangePassword(){
+            this.$v.form.currentPassword.$touch();
+            this.$v.form.newPassword.$touch();
+            this.$v.form.confirmNewPassword.$touch();
+            if(!this.$v.form.currentPassword.$invalid && !this.$v.form.newPassword.$invalid && !this.$v.form.confirmNewPassword.$invalid){
+                this.handleChangePassword();
+            }
+        },
+        validateProfile(){
+            this.$v.form.username.$touch();
+            this.$v.form.email.$touch();
+            
+            if((!this.$v.form.username.$invalid && !this.$v.form.email.$invalid) && ((this.checkUsername != this.form.username) || (this.checkEmail != this.form.email))){
+                this.updateProfile();
+            }
+        },
         resetModal()
         {
             this.currentPassword= '',
@@ -201,74 +365,16 @@ export default {
             this.confirmNewPassword = '',
             this.confirmNewPasswordState = null
         },
-        async handleChangePassword(bvModalEvt)
+        async handleChangePassword()
         {
            
-            bvModalEvt.preventDefault();
-            let check = false;
-            if(this.currentPassword =='' || this.currentPassword.length <=3){
-                this.currentPasswordState = 'invalid';
-                if(this.currentPassword == '')
-                {
-                    this.invalidFeedbackCurrentPassword = "Empty Current Password.";
-                }
-                else
-                {
-                    this.invalidFeedbackCurrentPassword = "Almost there! Need password to be more that 4."
-                }
-                check = true;
-            }
-            else{
-                this.currentPasswordState = 'valid';
-            }
-            if(this.newPassword =='' || this.newPassword.length <=4){
-                this.newPasswordState = 'invalid';
-                if(this.newPassword == '')
-                {
-                    this.invalidFeedbackNewPassword = "Empty New Password.";
-                }
-                else
-                {
-                    this.invalidFeedbackNewPassword = "Almost there! Need password to be more that 4."
-                }
-                check = true;
-            }
-            else{
-                this.newPasswordState = 'valid';
-            }
-            if(this.confirmNewPassword =='' || this.confirmNewPassword.length <=4 || !(lodash.eq(this.newPassword, this.confirmNewPassword))){
-                this.confirmNewPasswordState = 'invalid';
-                if(this.confirmNewPassword == '')
-                {
-                    this.invalidFeedbackConfirmNewPassword = "Empty Confirm Password.";
-                }
-                else if(!lodash.eq(this.newPassword, this.confirmNewPassword)){
-                    this.invalidFeedbackConfirmNewPassword = "New Password and Confirm Password do not match!";
-                }
-                else if(this.confirmNewPassword.length <=4)
-                {
-                    this.invalidFeedbackConfirmNewPassword= "Almost there! Need password to be more that 4.";
-                }
-                check = true;
-            }
-            else{
-                this.confirmNewPasswordState = 'valid';
-            }
-
-            if(check)
-            {
-                return;
-            }
-            else{
-                 this.$nextTick(() => {
-                    this.$refs.modal.hide()
-                }) 
+                this.changePasswordModal = false;
                 this.isLoading = true;
                 this.currentPasswordState = 'valid';
                 this.newPasswordState = 'valid';
                 this.confirmNewPasswordState = 'valid';
                 let api = new Api();
-                const res = await api.putData('/user/change_password', {newPassword: this.newPassword, currentPassword: this.currentPassword});
+                const res = await api.putData('/user/change_password', {newPassword: this.form.newPassword, currentPassword: this.form.currentPassword});
                 this.isLoading = false;
                 if(res.data.status == 300){
                     this.$notify({
@@ -292,26 +398,16 @@ export default {
                         })
                 }
                
-            }
+            //}
         },
         async updateProfile()
         {
-            if(this.currentUsername == this.username && this.currentEmail == this.email)
-            {
-                this.usernameState = "invalid";
-                this.emailState = "invalid";
-                this.invalidFeedbackEmail = "Hmm. seems email was not changed";
-                this.invalidFeedbackUsername = "Hmm, seems username was not changed";
-                return;
-            }
-            else{
+           
                 let api = new Api();
-                this.usernameState = "valid";
-                this.emailState = "valid";
                 this.isLoading = true;
                 setTimeout(async() => {
                     this.isLoading = false;
-                    const res = await api.putData('/user/updateMyProfile',{myProfileUsername: this.username, myProfileEmail: this.email, originalEmail: this.currentEmail});
+                    const res = await api.putData('/user/updateMyProfile',{myProfileUsername: this.form.username, myProfileEmail: this.form.email, originalEmail: this.checkEmail});
                     if(res.data.status == 200)
                     {
                         this.$notify({
@@ -363,7 +459,7 @@ export default {
                     })
             }
         }
-    }
+    
 }
 </script>
 <style scoped>

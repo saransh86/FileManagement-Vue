@@ -1,6 +1,6 @@
 <template>
     <div class="userOptions">
-            <b-dropdown variant="success">
+            <b-dropdown variant="md-layout">
                 <template slot="button-content">
                     <font-awesome-icon icon="user-circle" size="2x" class="icon"></font-awesome-icon>      
                 </template>
@@ -63,6 +63,16 @@ export default {
 {
     /* float: left; */
     width:150px;
+    margin-right: 50px;
     /* margin-top: 0px; */
+}
+
+.dropdown-text {
+    text-decoration: none;
+    color: black;
+}
+data-icon {
+     text-decoration: none;
+  color: black;
 }
 </style>

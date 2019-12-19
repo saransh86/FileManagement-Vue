@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-navbar toggleable="lg" type="dark" variant="success" sticky=true>
+        <!-- <b-navbar toggleable="lg" type="dark" variant="success" sticky=true>
             <b-navbar-brand :href="url">File Management</b-navbar-brand>
             <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
             <b-collapse id="nav-collapse" is-nav>
@@ -13,7 +13,18 @@
                     <userOptions/>
                 </b-navbar-nav>
             </b-collapse>
-        </b-navbar>
+        </b-navbar> -->
+        <md-toolbar class="md-primary md-collapse"> 
+            <h3 class="md-title" style="flex :1"> File Management </h3>
+            <div class="md-toolbar-section-end">
+                <div class="md-layout-item md-size-50">
+                    <div class="searchBar">
+                        <vue-select placeholder="Search Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="allFiles" ></vue-select>
+                    </div>
+                </div>
+                <userOptions/>
+            </div>
+        </md-toolbar>
     </div>
 </template>
 
@@ -78,7 +89,7 @@ export default {
 </script>
 
 <style scoped>
-.navbar-brand{
+.md-title{
     margin-left: 110px;
 }
 .searchBar{
