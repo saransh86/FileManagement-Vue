@@ -13,6 +13,8 @@ import home from './components/home'
 import myProfile from './components/myProfile'
 import admin from './components/admin'
 import impersonation from './components/impersonation'
+import share from './components/share'
+import verifyRegistration from './components/verifyRegistration'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -59,12 +61,22 @@ const routes = [
     component: myProfile
   },
   {
-   
-    path: '/*',
+    path: '/share',
+    name: 'share',
+    component: share
+  },
+  {
+    path: '/verifyRegistration*',
+    name: 'verifyRegistration',
+    component: verifyRegistration
+  },
+  {
+    path: '/*:name?',
     name: 'directory',
     component: directory
     
   },
+  
 
 ];
 
@@ -76,6 +88,27 @@ router.beforeEach(async (to, from, next) => {
   {
     next();
   }
+  else if(to.name == 'verifyRegistration'){
+    next();
+  }
+  // else if(to.name == 'share')
+  // {
+  //   let api = new Api();
+  //   const res = await api.getData('/check', {});
+  //   if(res.data.status == 200)
+  //   {
+  //     const check = await api.checkDirectory(to)
+  //     console.log("Check", check)
+  //     if(check.data.status == 200)
+  //     {
+  //         console.log("Go to directory!");
+  //         next({name: 'directory', params: {name: 'share'}});
+  //     }
+  //   }
+  //   else{
+  //     next({name: 'share'});
+  //   }
+  // }
   else
   {
     let api = new Api();

@@ -25,6 +25,8 @@
                         <md-button id="submitFileUpload" class="md-primary md-raised" @click="$refs.file.click()"> Upload</md-button>
                         <md-button class="md-primary md-raised" id="submitDelete" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</md-button>
                         <md-button class="md-primary md-raised" id="submitMove" :disabled="checkedFiles.length==0" @click="showMoveFileModal"> Move</md-button>
+                        <md-button class="md-primary md-raised" id="submitShare" :disabled="checkedFiles.length==0" @click="showShareFileModal">Share</md-button>
+                        <md-button id="downloadFile" class="md-primary md-raised" v-on:click="download" :disabled="checkedFiles.length==0"> Download</md-button>
                        <input type="file" hidden ref="file" name="file_to_upload" multiple v-on:change="handleFileUpload" v-on:click="resetUpload">
                    </div>  
 
@@ -116,6 +118,31 @@
             </md-dialog-actions>
             </form>
         </md-dialog>
+
+         <!--Modal for share files-->
+         <md-dialog :md-active.sync="shareToModal" v-on:md-closed="clearShareWithModal">
+            <md-dialog-title> Share File With </md-dialog-title>
+            <form novalidate class="md-layout-item md-size-100" @submit.prevent="shareFileWith">
+                <md-dialog-content >
+                     <div class="md-layout md-gutter">
+                        <div class="md-layout-item md-small-size-100">
+                            <md-field :class="getValidationClass('shareWithEmail')">
+                                <label for="shareWithEmail" > Email </label>
+                                <md-input name="shareWithEmail" id="shareWithEmail" v-model="form.shareWithEmail"> </md-input>
+                                <span class="md-error" v-if="!$v.form.shareWithEmail.required">The email is required.</span>
+                                <span class="md-error" v-else-if="!$v.form.shareWithEmail.email">Invalid email.</span>
+                            </md-field>
+                        </div>
+                    </div>
+                 </md-dialog-content>
+            
+            <md-dialog-actions >
+                <md-button class="md-primary" @click="shareToModal = false">Close</md-button>
+                <md-button type="submit" class="md-primary" >Share</md-button>
+            </md-dialog-actions>
+            </form>
+        </md-dialog> 
+
   </div>
 </template>
 <script>
@@ -127,11 +154,9 @@ import VueSelect from 'vue-select';
 import navBar from './navigationBar';
 import 'vue-select/dist/vue-select.css';
 import { validationMixin } from 'vuelidate'
-import {sameAs} from 'vuelidate/lib/validators';
 import {
     required,
     email,
-    minLength,
     maxLength
   } from 'vuelidate/lib/validators'
 export default {
@@ -139,46 +164,19 @@ export default {
     name: "directory",
     mixins: [validationMixin],
     async beforeRouteEnter(to, from, next){
-      /**
-       * check to see if the directory exists
-       */
-        // if(from.name != "myProfile")
-        // {
-            
-            const basePath = "root/home";
-            let dirs = to.path.split(/\//);
-            let toPaths = [];
-            let path;
-            if(dirs.length >2)
-            {
-                toPaths = to.path.split(/\//);
-                toPaths.pop();
-                path = basePath + toPaths.join('/');  
-            }
-            else
-            {
-                path = basePath;
-            }
-            let api = new Api();
-            const res = await api.getData('/file/is_directory',{path: path, directory: dirs[dirs.length - 1]});
-            console.log("Path",path);
-            console.log("Directory",dirs[dirs.length - 1]);
-            console.log("Response", res.data.message);
-            console.log("Status", res.data.status);
-            if(res.data.status == 200)
-            {
-                next();
-            }
-            else
-            {
-                next({name: 'home'});
-            }
-        // }   
-        // else
-        // {   
-        //     console.log("Going to", to.path);
-        //     next({name: 'home'});
-        // }
+    //   /**
+    //    * check to see if the directory exists
+    //    */
+        let api = new Api();
+        let res = await api.checkDirectory(to);
+        if(res.data.status == 200)
+        {
+            next();
+        }
+        else
+        {
+            next({name: 'home'});
+        }
     },
 async beforeRouteUpdate(to, from, next) {
     
@@ -198,10 +196,6 @@ async beforeRouteUpdate(to, from, next) {
         }
         let api = new Api();
         const res = await api.getData('/file/is_directory',{path: path, directory: dirs[dirs.length - 1]});
-        console.log("Update Path",path);
-        console.log("Directory",dirs[dirs.length - 1]);
-        console.log("Response", res.data.message);
-        console.log("Status", res.data.status);
         if(res.data.status == 200)
         {
             next();
@@ -240,6 +234,8 @@ async beforeRouteUpdate(to, from, next) {
         },
         createDirectoryModal: false,
         moveToModal: false,
+        shareToModal: false,
+        api : new Api()
     };
   },
   
@@ -247,6 +243,10 @@ async beforeRouteUpdate(to, from, next) {
         form: {
             dirName:{
                 required
+            },
+            shareWithEmail: {
+                required,
+                email
             }
         }
     },
@@ -276,6 +276,11 @@ async beforeRouteUpdate(to, from, next) {
             this.form.dirName = null;
             this.$v.form.dirName.$reset();
         },
+        async clearShareWithModal()
+        {
+            this.form.shareWithEmail = null;
+            this.$v.form.shareWithEmail.$reset();
+        },
         validateCreateDirectory(){
             this.$v.form.dirName.$touch();
             if(!this.$v.form.dirName.$invalid){
@@ -284,6 +289,9 @@ async beforeRouteUpdate(to, from, next) {
         },
         async forceUpdate(){
             this.componentKey += 1;
+        },
+         showShareFileModal(){
+            this.shareToModal = true;
         },
         async init(){
             let directory = window.location.href.split("/");
@@ -319,9 +327,7 @@ async beforeRouteUpdate(to, from, next) {
             const [result, allDirectories] = await Promise.all([welcomePromise, allDirectoriesPromise]);
    
             if(result.data.status == 200  && allDirectories.data.status==200)
-            {
-                console.log("Got the data", res);
-                
+            {   
                 this.directories = result.data.data.directories;
                 this.files = result.data.data.files;
                 this.allDirectories = allDirectories.data.data;
@@ -332,7 +338,6 @@ async beforeRouteUpdate(to, from, next) {
             }
             else
             {
-                console.log("oops! Error!", result);
                 this.$notify({
                 group: 'notify',
                 title: 'Cannot load files and directories at this time.',
@@ -347,10 +352,7 @@ async beforeRouteUpdate(to, from, next) {
             let api = new Api();
             this.isLoading = true;
             this.moveToModal = false;
-            // console.log("Directory Selected ", this.selectedDir);
-            // console.log("Files ", this.files);
             const path = this.selectedDir.path + '/' + this.selectedDir.directoryName;
-            // console.log("New PAth", path);
             const res = await api.putData('/user/move_files',{files: this.checkedFiles, path: path});
             this.isLoading = false;
             if(res.data.status == 200){
@@ -377,6 +379,12 @@ async beforeRouteUpdate(to, from, next) {
             }
             
         },
+        async shareFileWith(){
+            this.$v.form.shareWithEmail.$touch();
+            if(!this.$v.form.shareWithEmail.$invalid){
+                this.handleShareFile();
+            }
+        },
         async showMoveFileModal(){
            let api = new Api(); 
            this.isLoading = true;
@@ -384,6 +392,8 @@ async beforeRouteUpdate(to, from, next) {
            this.isLoading = false;
            if(res.data.status == 200){
                this.allDirectories = res.data.data;
+               let home = {directoryName: 'home',path: 'root'}
+               this.allDirectories.splice(0, 0, home);
                //    this.$refs['moveModal'].show();
                 this.moveToModal = true;
            } 
@@ -399,6 +409,37 @@ async beforeRouteUpdate(to, from, next) {
                     duration: 10000
                 })
            }
+        },
+        async handleShareFile()
+        {
+            this.isLoading = true;
+            this.shareToModal = false;
+            const email= this.form.shareWithEmail;
+            const path = this.path;
+            const res = await this.api.postData('/file/share_file', {email: email, files: this.checkedFiles, path: path});
+            this.isLoading = false;
+
+            if(res.data.status == 200){
+                this.$notify({
+                            group: 'notify',
+                            title: 'Share Successful!',
+                            type: 'success',
+                            text: res.data.message,
+                            duration: 10000
+                        })
+            }
+            else if(res.data.status == 401){
+                this.$router.push({name: 'login'});
+            }
+            else{
+                this.$notify({
+                    group: 'notify',
+                    title: 'Oops! Cannot share file at this time!',
+                    type: 'error',
+                    text: res.data.message,
+                    duration: 10000
+                })
+            }
         },
         resetUpload()
         {
@@ -421,7 +462,6 @@ async beforeRouteUpdate(to, from, next) {
                     if(this.files.indexOf(file.name) == -1)
                     {
                         data.append("file_to_upload", file);
-                        console.log("In filter",file.name);
                         return file.name;
                     }
                 }.bind(this));
@@ -441,8 +481,6 @@ async beforeRouteUpdate(to, from, next) {
                 {
                     let api = new Api();
                     const res = await api.postData('/file/upload', data);
-                    console.log("Uploaded", filesToUpload.length);
-                    console.log("Selected", files.length);
                     if(res.data.status == 200)
                     {
                         let currentpath = this.path.split(/\//);
@@ -450,7 +488,6 @@ async beforeRouteUpdate(to, from, next) {
                         
                         for(let i=0; i<filesToUpload.length; i++)
                         {
-                            console.log("pushing in the file");
                             this.files.push(filesToUpload[i].name); 
                             let obj = {fileName: '', path: ''};
                             obj.fileName = filesToUpload[i].name;
@@ -542,9 +579,6 @@ async beforeRouteUpdate(to, from, next) {
                 this.isLoading = false;
                 if(this.checkedFiles.length > 0 && this.checkedDirs.length> 0)
                 {
-                    console.log("Click for files and dirs");
-                    console.log("FILES", this.checkedFiles);
-                    console.log("Directory", this.checkedDirs);
                     const resFiles =  api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
                     const resDirs =  api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path});
                
@@ -570,7 +604,6 @@ async beforeRouteUpdate(to, from, next) {
                     }
                     else if(res[0].data.status == 300 || res[1].data.status == 300)
                     {
-                        console.log("uh ho! Cannot confirm the delete!");
                         this.$notify({
                             group: 'notify',
                             title: 'Delete Failed. Dammit!',
@@ -584,12 +617,8 @@ async beforeRouteUpdate(to, from, next) {
                 }
                 else if(this.checkedDirs.length > 0 && this.checkedFiles.length == 0)
                 {
-                    console.log("Click just for dirs");
-                    console.log("FILES", this.checkedFiles);
-                    console.log("Directory", this.checkedDirs);
                 //let api = new Api();
                     const res = await api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path})
-                    console.log(res);
                     if(res.data.status == 200)
                     {
                         // this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
@@ -622,9 +651,6 @@ async beforeRouteUpdate(to, from, next) {
                 else if(this.checkedFiles.length > 0 && this.checkedDirs.length == 0)
                 {
                     const res = await api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
-                    console.log("Click just for files");
-                    console.log("FILES", this.checkedFiles);
-                    console.log("Directory", this.checkedDirs);
                     if(res.data.status == 200)
                     {
                         // this.files = this.files.filter(x => !this.checkedFiles.includes(x));
@@ -661,11 +687,11 @@ async beforeRouteUpdate(to, from, next) {
             //})
 
         },
-        async download(e)
+        async download()
         {
-            const file = e.currentTarget.getAttribute('value');
+            
             let api = new Api();
-            const res = await api.getData('/file/download',{file: file, path: this.path},'blob');
+            const res = await api.getData('/file/download',{file: this.checkedFiles, path: this.path},'blob');
             if(res.data.status == 401)
             {
                 this.$router.push({name: 'login'});
@@ -685,7 +711,12 @@ async beforeRouteUpdate(to, from, next) {
                 const url = window.URL.createObjectURL(new Blob([res.data]));
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', file);
+                if(this.checkedFiles.length > 1){
+                    link.setAttribute('download',"Files.zip");
+                }
+                else{
+                    link.setAttribute('download',res.config.params.file[0]);
+                }
                 document.body.appendChild(link);
                 link.click();
             }
@@ -693,7 +724,6 @@ async beforeRouteUpdate(to, from, next) {
         },
         selectAll()
         {
-            console.log("ALL SELECTED", this.allSelected);
             this.checkedFiles = [];
             this.checkedDirs = []
             if(!this.allSelected)

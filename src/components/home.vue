@@ -11,7 +11,11 @@
                <md-card-header>
                    <div class="md-title"> Welcome {{username}} </div>
                </md-card-header>
-
+                <md-tabs md-sync-route >
+                    <md-tab id="tab-home" md-label="Home" to="/" md-alignment="center" exact/>
+                    <md-tab id="tab-share" md-label="Shared" to="/share" md-alignment="center" exact/>
+                    
+                </md-tabs>
                <md-card-content>
                    <div class="md-layout-item md-layout">
                     </div>
@@ -21,6 +25,7 @@
                         <md-button class="md-primary md-raised" id="submitDelete" :disabled="checkedFiles.length==0 && checkedDirs.length==0" v-on:click="bulkDelete"> Delete</md-button>
                         <md-button class="md-primary md-raised" id="submitMove" :disabled="checkedFiles.length==0" @click="showMoveFileModal"> Move</md-button>
                         <md-button class="md-primary md-raised" id="submitShare" :disabled="checkedFiles.length==0" @click="showShareFileModal">Share</md-button>
+                        <md-button id="downloadFile" class="md-primary md-raised" v-on:click="download" :disabled="checkedFiles.length==0"> Download</md-button>
                        <input type="file" hidden ref="file" name="file_to_upload" multiple v-on:change="handleFileUpload" v-on:click="resetUpload">
                    </div>  
 
@@ -137,12 +142,9 @@ import navigate from './navigationBar';
 import VueSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import { validationMixin } from 'vuelidate'
-import {sameAs} from 'vuelidate/lib/validators';
 import {
     required,
-    email,
-    minLength,
-    maxLength
+    email
   } from 'vuelidate/lib/validators'
 export default {
     
@@ -219,7 +221,6 @@ export default {
         },
         async forceUpdate(){
             this.componentkey += 1;
-            console.log("Key:" , this.componentkey);
         },
         async clearShareWithModal()
         {
@@ -239,10 +240,8 @@ export default {
            
             const allDirectoriesPromise = api.getData('/user/get_directories', {});
             const [res, allDirectories] = await Promise.all([welcomePromise, allDirectoriesPromise]);
-           // console.log("Res",res);
             if(res.data.status == 200 && allDirectories.data.status == 200)
             {
-                //console.log("Got the data", allFiles.data.data);
                 this.username = res.data.data.username
                 this.directories = res.data.data.directories;
                 this.files = res.data.data.files;
@@ -255,7 +254,6 @@ export default {
             }
             else
             {
-                //console.log("oops! Error!", res);
                 this.$notify({
                     group: 'notify',
                     title: 'Cannot load files at this time.',
@@ -295,9 +293,10 @@ export default {
         async handleShareFile()
         {
             this.isLoading = true;
-            this.showShareFileModal = false;
-            const fileName = this.file.shareWithEmail;
-            const res = await this.api.postData('/file/share_file', {email: fileName, files: this.checkedFiles});
+            this.shareToModal = false;
+            const email= this.form.shareWithEmail;
+            const path = this.path;
+            const res = await this.api.postData('/file/share_file', {email: email, files: this.checkedFiles, path: path});
             this.isLoading = false;
 
             if(res.data.status == 200){
@@ -328,11 +327,7 @@ export default {
             this.isLoading = true;
             this.moveToModal = false;
            
-            // // console.log("Directory Selected ", this.selectedDir);
-            // // console.log("Files ", this.files);
-             const path = this.selectedDir.path + '/' + this.selectedDir.directoryName;
-            //const path = this.allDirectories.directoryName;
-            // // console.log("New PAth", path);
+            const path = this.selectedDir.path + '/' + this.selectedDir.directoryName;
             const res = await api.putData('/user/move_files',{files: this.checkedFiles, path: path});
             this.isLoading = false;
            
@@ -369,11 +364,6 @@ export default {
             this.directoryName = ''
             this.directoryState = null
         },
-        // setSelected(value) {
-        //     //console.log("On change", value);
-        //     location.href = value.path;
-        //     //  trigger a mutation, or dispatch an action  
-        // },
         async handleFileUpload(e)
         {
              
@@ -387,7 +377,6 @@ export default {
                     if(this.files.indexOf(file.name) == -1)
                     {
                         data.append("file_to_upload", file);
-                        //console.log("In filter",file.name);
                         return file.name;
                     }
                 }.bind(this));
@@ -407,20 +396,16 @@ export default {
                 {
                     let api = new Api();
                     const res = await api.postData('/file/upload', data);
-                    //console.log("Uploaded", filesToUpload.length);
-                    //console.log("Selected", files.length);
                     if(res.data.status == 200)
                     {
                         let currentpath = this.path.split(/\//);
                         currentpath.splice(0,2);
                         for(let i=0; i<filesToUpload.length; i++)
                         {
-                            //console.log("pushing in the file");
                             this.files.push(filesToUpload[i].name);
                             let obj = {fileName: '', path: ''};
                             obj.fileName = filesToUpload[i].name;
                             obj.path = "/#/" + currentpath.join('/');
-                            //this.allFiles.push(obj);
                         }
                     
                         this.$notify({
@@ -466,7 +451,6 @@ export default {
         {
             
                 const name = this.form.directoryName;
-                //console.log("Loading.....started");
                 this.directoryState = 'valid';
                 this.isLoading = true;
                 this.createDirectoryModal = false;
@@ -478,7 +462,6 @@ export default {
                     {
                     
                         this.directories.push(name.trim());
-                        //console.log("NEW directories",this.directories);
                         this.$notify({
                             group: 'notify',
                             title: 'Directory Created!',
@@ -515,9 +498,6 @@ export default {
                 this.isLoading = false;
                 if(this.checkedFiles.length > 0 && this.checkedDirs.length> 0)
                 {
-                    //console.log("Click for files and dirs");
-                    //console.log("FILES", this.checkedFiles);
-                    //console.log("Directory", this.checkedDirs);
                     const resFiles =  api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
                     const resDirs =  api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path});
                
@@ -525,9 +505,6 @@ export default {
                 
                     if(res[0].data.status == 200 && res[1].data.status == 200)
                     {
-                        // this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
-                        // this.files = this.files.filter(x => !this.checkedFiles.includes(x));
-                        // this.allFiles = this.allFiles.filter(x => !this.allFiles.includes(x));
                         await this.init();
                         this.$notify({
                             group: 'notify',
@@ -543,7 +520,6 @@ export default {
                     }
                     else if(res[0].data.status == 300 || res[1].data.status == 300)
                     {
-                        //console.log("uh ho! Cannot confirm the delete!");
                         this.$notify({
                             group: 'notify',
                             title: 'Delete Failed. Dammit!',
@@ -557,15 +533,10 @@ export default {
                 }
                 else if(this.checkedDirs.length > 0 && this.checkedFiles.length == 0)
                 {
-                    //console.log("Click just for dirs");
-                    //console.log("FILES", this.checkedFiles);
-                    //console.log("Directory", this.checkedDirs);
-                //let api = new Api();
+                    
                     const res = await api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path})
-                    //console.log(res);
                     if(res.data.status == 200)
                     {
-                        // this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
                         await this.init();
                         this.$notify({
                             group: 'notify',
@@ -595,13 +566,8 @@ export default {
                 else if(this.checkedFiles.length > 0 && this.checkedDirs.length == 0)
                 {
                     const res = await api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
-                    //console.log("Click just for files");
-                    //console.log("FILES", this.checkedFiles);
-                    //console.log("Directory", this.checkedDirs);
                     if(res.data.status == 200)
                     {
-                        // this.files = this.files.filter(x => !this.checkedFiles.includes(x));
-                        // this.allFiles = this.allFiles.filter(x => !this.allFiles.includes(x));
                         await this.init();
                         this.$notify({
                             group: 'notify',
@@ -635,12 +601,11 @@ export default {
 
         },
         
-    async download(e)
+    async download()
     {
-        const file = e.currentTarget.getAttribute('value');
         try{
             let api = new Api();
-            const res = await api.getData("/file/download",{file: file, path: this.path},'blob');
+            const res = await api.getData("/file/download",{file:this.checkedFiles, path: this.path},'blob');
             if(res.data.res == 401)
             {
                 this.$router.push({name: 'login'});
@@ -656,12 +621,17 @@ export default {
                 })
             }
             else{
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', file);
-            document.body.appendChild(link);
-            link.click();
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                if(this.checkedFiles.length > 1){
+                    link.setAttribute('download',"Files.zip");
+                }
+                else{
+                    link.setAttribute('download',res.config.params.file[0]);
+                }
+                document.body.appendChild(link);
+                link.click();
             }
         }
         catch(e)
@@ -671,7 +641,6 @@ export default {
     },
     selectAll()
     {
-        //console.log("ALL SELECTED", this.allSelected);
         this.checkedFiles = [];
         this.checkedDirs = [];
         if(!this.allSelected)

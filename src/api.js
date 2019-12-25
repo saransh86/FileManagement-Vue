@@ -77,6 +77,36 @@ export class Api
         })
     }
 
+    checkDirectory(to){
+        return new Promise(async(resolve, reject) => {
+         
+            try{
+                const basePath = "root/home";
+                let dirs = to.path.split(/\//);
+                let toPaths = [];
+                let path;
+                if(dirs.length >2)
+                {
+                    toPaths = to.path.split(/\//);
+                    toPaths.pop();
+                    path = basePath + toPaths.join('/');  
+                }
+                else
+                {
+                    path = basePath;
+                }
+                //let api = new Api();
+                const res = await this.getData('/file/is_directory',{path: path, directory: dirs[dirs.length - 1]});
+                resolve(res);
+            }
+            catch(e){
+                reject(e);
+            }
+        })
+        
+        
+    }
+
     // post()
     // {
 
