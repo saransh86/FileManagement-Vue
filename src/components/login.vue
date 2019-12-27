@@ -181,7 +181,8 @@ export default {
             },
             sending : false,
             registerModal: false,
-            forgotPasswordModal: false
+            forgotPasswordModal: false,
+            api: new Api()
         }
     },
     validations: {
@@ -238,7 +239,7 @@ export default {
         validateForgotPassword(){
             this.$v.form.forgotPassword.$touch();
             if(!this.$v.form.forgotPassword.$invalid){
-                console.log("Send the email!");
+                this.sendPasswordResetEmail();
             }
         },
          validateRegisterUser(){
@@ -260,6 +261,33 @@ export default {
             if (!this.$v.form.username.$invalid && !this.$v.form.password.$invalid) {
                 this.handleLogin()
             }
+        },
+        async sendPasswordResetEmail(){
+            const email = this.form.forgotPassword;
+            this.forgotPasswordModal = false;
+            this.isLoading = true;
+            const res = await this.api.postData('/forgotPassword',{email: email});
+            setTimeout(() => {
+                this.isLoading = false;
+                if(res.data.status == 200){
+                    this.$notify({
+                        group: 'login',
+                        title: 'Email Sent!',
+                        type: 'success',
+                        text: res.data.message,
+                        duration: 10000
+                    })
+                }
+                else{
+                    this.$notify({
+                        group: 'login',
+                        title: 'Email error!',
+                        type: 'error',
+                        text: res.data.message,
+                        duration: 10000
+                    })
+                }
+            }, 1000);
         },
         getValidationClass (fieldName) {
         const field = this.$v.form[fieldName]

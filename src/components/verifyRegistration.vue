@@ -1,25 +1,32 @@
 <template>
     <div>
-        <div class="index-page">
+        <div class="user-page">
             <div class="vld-parent">
                 <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
-            
-             <md-card class="md-layout-item md-size-100 md-small-size-100" >
-                <md-card-header>
-                   <div class="md-title">File Management Verify Registration</div>
-               </md-card-header>
-               <md-card-content>
-                    <div  class="layout">
-                        <div v-if="this.check">
-                            <p> Thank you for Registering! You have successfully Registered! </p>
-                            <md-button id="goToLogin" class="md-primary md-raised"  v-on:click="goToLogin">Login</md-button>
+            </div>
+            <div class="user-profile">
+                <md-card class="md-layout-item md-size-100 md-small-size-100" >
+                    <md-card-header>
+                        <div class="md-title">File Management Verify Registration</div>
+                     </md-card-header>
+                    <md-card-content>
+                        <div  class="layout">
+                            <div v-if="this.check">
+                                <p>{{text}}</p>
+                                <md-button id="goToLogin" class="md-primary md-raised"  v-on:click="goToLogin">Login</md-button>
+                            </div>
+                            <div v-else>
+                                <p>{{text}} </p>
+                                <div v-if="this.showLogin">
+                                    <md-button id="goToLogin" class="md-primary md-raised"  v-on:click="goToLogin">Login</md-button>
+                                </div>
+                                <div v-else>
+                                    <md-button id="resendEmail" class="md-primary md-raised"  v-on:click="resendEmail">Re-send Email</md-button>
+                                </div>
+                            
+                            </div>
                         </div>
-                        <div v-else>
-                            <p>Oops! Looks like the link expired or you have already registered! </p>
-                            <md-button id="resendEmail" class="md-primary md-raised"  v-on:click="resendEmail">Re-send Email</md-button>
-                        </div>
-                    </div>
-               </md-card-content>
+                    </md-card-content>
              </md-card>
             </div>
         </div>
@@ -38,13 +45,36 @@ export default {
             check: null,
             isLoading: false,
             fullPage: true,
-            api : new Api()
+            api : new Api(),
+            text: null,
+            showLogin: null,
+            username: null
         }
     },
     async mounted()
     {
-        console.log("QP", this.$route.query.username);
-        console.log("Token", this.$route.query.token);
+        const username = this.$route.query.username;
+        this.username = username;
+        const token = this.$route.query.token;
+        this.isLoading = true;
+        let res = await this.api.postData('/verifyRegistration', {username: username, token: token});
+        this.isLoading = false;
+        if(res.data.status == 200){
+            this.check = true;
+            this.text = res.data.message;
+        }
+        else{
+            console.log(res.data.status);
+            this.check = false;
+            if(res.data.status == 300){
+                this.showLogin = true;
+            }
+            else{
+                this.showLogin = false;
+            }
+            this.text = res.data.message;
+            console.log("ShowLogin", this.showLogin);
+        }
     },
     components:{
         Loading
@@ -54,31 +84,32 @@ export default {
            window.location = '/';
         },
         async resendEmail(){
-            console.log("Resend Email!");
+            this.isLoading = true;
+            const res = await this.api.postData('/resendEmail', {username: this.username});
+            setTimeout(() => {
+                this.text = res.data.message;
+                this.showLogin = true;
+                this.isLoading = false;
+            }, 1000);
         }
     }
 }
 </script>
 <style scoped>
-.index-page{
-  position:fixed;
+.user-page{
+  position: fixed;;
   right: 100px;
-  top: 60px;
+  top: 40px;
   left:100px;
   padding: 20px;
   background-color: white;
-  /* overflow:auto; */
 }
-
-.layout {
-    position: relative;
-    /* right: 100px; */
-    top: 20px;
-    /* left:inherit;
-    right: inherit; */
-    /*padding: 20px; */
-    background-color: white;
-    overflow: scroll;
-    max-height: 300px;  
+.user-profile{
+  position: relative;
+  background-color: white;
+  /* width: 50%; */
+  top: 100%;
+  margin: 0;
+  font-size: medium;
 }
 </style>
