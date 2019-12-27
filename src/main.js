@@ -14,6 +14,7 @@ import myProfile from './components/myProfile'
 import admin from './components/admin'
 import impersonation from './components/impersonation'
 import share from './components/share'
+import resetPassword from './components/resetPassword'
 import verifyRegistration from './components/verifyRegistration'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
@@ -71,6 +72,11 @@ const routes = [
     component: verifyRegistration
   },
   {
+    path: '/resetPassword*',
+    name: 'resetPassword',
+    component: resetPassword
+  },
+  {
     path: '/*:name?',
     name: 'directory',
     component: directory
@@ -89,6 +95,9 @@ router.beforeEach(async (to, from, next) => {
     next();
   }
   else if(to.name == 'verifyRegistration'){
+    next();
+  }
+  else if(to.name == 'resetPassword'){
     next();
   }
   // else if(to.name == 'share')
