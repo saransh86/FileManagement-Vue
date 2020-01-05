@@ -79,10 +79,10 @@ export default {
             }
         },
         setSelected(value) {
-            console.log("Value ", value);
+           
             
             location.href = value.path;
-            console.log("Where", location.href);
+           
         },
     }
 }

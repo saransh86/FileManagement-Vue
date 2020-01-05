@@ -20,7 +20,7 @@
                 
                  <div class="md-layout">
                    
-                    <md-button id="downloadFile" class="md-primary md-raised" v-on:click="download"> Download</md-button>
+                    <md-button id="downloadFile" :disabled="checkedFiles.length==0" class="md-primary md-raised" v-on:click="download"> Download</md-button>
                         
                 </div>  
 
@@ -71,7 +71,7 @@ export default {
     async mounted(){
         let res = await this.api.getData('/file/get_shared_files',{});
         this.isLoading = true;
-        setTimeout(() => {
+        
             this.isLoading = false;
 
             if(res.data.status == 200)
@@ -92,7 +92,7 @@ export default {
                         duration: 10000
                     })
             }
-        }, 500);
+       
     },
     components:{
         navigate,

@@ -456,7 +456,7 @@ async beforeRouteUpdate(to, from, next) {
             let filesToUpload = [];
             let data = new FormData();
             this.isLoading = true;
-            setTimeout(async() => {
+           
                 this.isLoading = false;
                 filesToUpload = lodash.filter(files, function(file){
                     if(this.files.indexOf(file.name) == -1)
@@ -529,7 +529,7 @@ async beforeRouteUpdate(to, from, next) {
                  
                 }
                 await this.forceUpdate();
-             }, 1000);
+             
         },
         async handleCreateDirectory()
         {
@@ -539,7 +539,7 @@ async beforeRouteUpdate(to, from, next) {
                 let api = new Api();
                 this.createDirectoryModal = false;
                 const res = await api.postData('/file',{name: this.form.dirName, path: this.path} );
-                setTimeout(() => {
+                
                     this.isLoading = false;
                     if(res.data.status==200)
                     {
@@ -568,14 +568,14 @@ async beforeRouteUpdate(to, from, next) {
                             duration: 10000
                         }) 
                     }
-                }, 1000);
+                
                 
         },
         async bulkDelete()
         {
             let api = new Api();
             this.isLoading = true;
-            setTimeout(async() => {
+            
                 this.isLoading = false;
                 if(this.checkedFiles.length > 0 && this.checkedDirs.length> 0)
                 {
@@ -681,7 +681,7 @@ async beforeRouteUpdate(to, from, next) {
                     this.checkedFiles = [];
                 }
                 await this.forceUpdate();
-            }, 1000);
+            
             
             this.allSelected = false;
             //})

@@ -1,5 +1,7 @@
 <template>
+   
     <div class="userOptions">
+        
             <b-dropdown variant="md-layout">
                 <template slot="button-content">
                     <font-awesome-icon icon="user-circle" size="2x" class="icon"></font-awesome-icon>      
@@ -8,12 +10,13 @@
                     <font-awesome-icon icon="user"></font-awesome-icon>
                     <span class="dropdown-text" > My Profile </span> 
                 </b-dropdown-item>
-                <b-dropdown-item href="/logout">
+                <b-dropdown-item href="/#/">
                     <font-awesome-icon icon="sign-out-alt"></font-awesome-icon>
                     <span class="dropdown-text" v-on:click="signOut"> Sign Out </span>
                 </b-dropdown-item>
             </b-dropdown>
         </div>
+   
 </template>
 
 <script>
@@ -22,35 +25,36 @@ export default {
     name: 'userOptions',
     data(){
         return{
-            url: "http://localhost:8080/#/"
+            url: "http://localhost:8080/#/"  
         }
     },
     methods:{
         async signOut()
         {
             let api = new Api();
-            this.isLoading = true;
-            const res = api.getData('/home/logout',{});
+            
+            const res = await api.getData('/home/logout',{});
+            
             console.log("LOGOUT", res);
-            this.isLoading = false;
+            
             if(res.data.status == 200)
-            {
-                this.$router.push({name: 'login'});
-            }
-            else if(res.data.status == 401)
-            {
-                this.$router.push({name: 'login'});
-            }
-            else 
-            {
-                this.$notify({
-                        group: 'notify',
-                        title: 'Mind Refreshing?',
-                        type: 'error',
-                        text: "Cannot logout at this time. Ugh! This sucks!",
-                        duration: 10000
-                    })
-            } 
+                {
+                    this.$router.push({name: 'login'});
+                }
+                else if(res.data.status == 401)
+                {
+                    this.$router.push({name: 'login'});
+                }
+                else 
+                {
+                    this.$notify({
+                            group: 'notify',
+                            title: 'Mind Refreshing?',
+                            type: 'error',
+                            text: "Cannot logout at this time. Ugh! This sucks!",
+                            duration: 10000
+                        })
+                } 
        
         }
     }

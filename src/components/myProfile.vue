@@ -227,9 +227,8 @@ export default {
         const res = await api.getData('/user/userProfile');
         const resAdmin = await api.getData('/user/is_admin',{params: ''});
         this.isAdmin = resAdmin.data.data;
-        setTimeout(() => {
+        
             this.isLoading = false;
-            console.log("Got the user Profile", res);
             if(res.data.status == 200)
             {
                 this.form.username = res.data.message.username;
@@ -251,7 +250,7 @@ export default {
                         duration: 10000
                     })
             }
-        }, 500);
+        
         
     },
     data()
@@ -405,7 +404,7 @@ export default {
            
                 let api = new Api();
                 this.isLoading = true;
-                setTimeout(async() => {
+                
                     this.isLoading = false;
                     const res = await api.putData('/user/updateMyProfile',{myProfileUsername: this.form.username, myProfileEmail: this.form.email, originalEmail: this.checkEmail});
                     if(res.data.status == 200)
@@ -432,7 +431,7 @@ export default {
                             duration: 10000
                         })
                     }
-                }, 1000);
+               
 
             }
         },

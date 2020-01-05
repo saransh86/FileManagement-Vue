@@ -20,11 +20,11 @@
                         <md-card-content>
                             <div class="md-layout md-gutter">
                                 <div class="md-layout-item md-small-size-100">
-                                    <md-field :class="getValidationClass('username')">
-                                        <label for="username"> Username </label>
-                                         <md-input name="username" id="username" v-model="form.username" :disabled="sending" />
-                                        <span class="md-error" v-if="!$v.form.username.required">The username is required</span>
-                                        <span class="md-error" v-else-if="!$v.form.username.minlength">Minimum length of username should be 5</span>
+                                    <md-field :class="getValidationClass('email')">
+                                        <label for="email"> Email </label>
+                                         <md-input name="email" id="email" v-model="form.email" :disabled="sending" />
+                                        <span class="md-error" v-if="!$v.form.email.required">The email is required.</span>
+                                        <span class="md-error" v-else-if="!$v.form.email.minlength">Invalid email.</span>
                                     </md-field>
                                 </div>
                             </div>
@@ -34,8 +34,8 @@
                                     <md-field :md-toggle-password="false" :class="getValidationClass('password')">
                                         <label for="password"> Password </label>
                                         <md-input name="password" type="password" id="password" v-model="form.password" :disabled="sending" />
-                                        <span class="md-error" v-if="!$v.form.password.required">The password is required</span>
-                                        <span class="md-error" v-else-if="!$v.form.password.minlength">Minimum length of password should be 6</span>
+                                        <span class="md-error" v-if="!$v.form.password.required">The password is required.</span>
+                                        <span class="md-error" v-else-if="!$v.form.password.minlength">Minimum length of password should be 6.</span>
                                     </md-field>
                                 </div>
                             </div>
@@ -171,7 +171,7 @@ export default {
             fullPage: true,
 
             form :{
-                username: null,
+                email: null,
                 password: null,
                 registerUsername: null,
                 registerEmail: null,
@@ -187,9 +187,9 @@ export default {
     },
     validations: {
         form : {
-            username: {
+            email: {
                 required,
-                minLength: minLength(5)
+                email
             },
             password: {
                 required,
@@ -255,10 +255,10 @@ export default {
              }
          },
          validateUser () {
-            this.$v.form.username.$touch();
+            this.$v.form.email.$touch();
             this.$v.form.password.$touch();
 
-            if (!this.$v.form.username.$invalid && !this.$v.form.password.$invalid) {
+            if (!this.$v.form.email.$invalid && !this.$v.form.password.$invalid) {
                 this.handleLogin()
             }
         },
@@ -267,7 +267,6 @@ export default {
             this.forgotPasswordModal = false;
             this.isLoading = true;
             const res = await this.api.postData('/forgotPassword',{email: email});
-            setTimeout(() => {
                 this.isLoading = false;
                 if(res.data.status == 200){
                     this.$notify({
@@ -287,7 +286,7 @@ export default {
                         duration: 10000
                     })
                 }
-            }, 1000);
+            
         },
         getValidationClass (fieldName) {
         const field = this.$v.form[fieldName]
@@ -303,12 +302,11 @@ export default {
            
                 this.sending = true;
                 let api = new Api();
-                let res = await api.postData("/authenticate", {username: this.form.username, password: this.form.password});
-                setTimeout(() => {
+                let res = await api.postData("/authenticate", {email: this.form.email, password: this.form.password});
+                
                     this.sending= false;
                     if(res.data.status == 300)
                     {
-                        console.log("Notify Error!");
                         this.$notify({
                             group: 'login',
                             title: 'Login error!',
@@ -332,7 +330,7 @@ export default {
                             this.$router.push({name: 'admin'});
                         }
                     }
-                }, 2000); 
+                
            
         },
         resetModalRegister()
@@ -349,7 +347,6 @@ export default {
         async handleRegister(bvModalEvt)
         {
             
-            console.log("In register!");
             this.registerModal = false;
             this.sending = true;
            
@@ -359,7 +356,7 @@ export default {
             let api = new Api();
             
             const res = await api.postData('/register', {registerUsername: this.form.registerUsername, registerEmail: this.form.registerEmail, registerPassword: this.form.registerPassword}); 
-            setTimeout(() => {
+            
                this.sending = false;
                if(res.data.status == 200)
                 {
@@ -381,7 +378,7 @@ export default {
                         duration: 10000    
                         }) 
                 }
-            }, 2000);
+           
             this.$nextTick(() => {
                 this.$refs.modal.hide()
             })    

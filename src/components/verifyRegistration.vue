@@ -48,23 +48,23 @@ export default {
             api : new Api(),
             text: null,
             showLogin: null,
-            username: null
+            email: null
         }
     },
     async mounted()
     {
-        const username = this.$route.query.username;
-        this.username = username;
+        const email= this.$route.query.email;
+        this.email = email;
         const token = this.$route.query.token;
         this.isLoading = true;
-        let res = await this.api.postData('/verifyRegistration', {username: username, token: token});
+        let res = await this.api.postData('/verifyRegistration', {email: email, token: token});
         this.isLoading = false;
         if(res.data.status == 200){
             this.check = true;
             this.text = res.data.message;
         }
         else{
-            console.log(res.data.status);
+            
             this.check = false;
             if(res.data.status == 300){
                 this.showLogin = true;
@@ -73,7 +73,7 @@ export default {
                 this.showLogin = false;
             }
             this.text = res.data.message;
-            console.log("ShowLogin", this.showLogin);
+           
         }
     },
     components:{
@@ -85,12 +85,12 @@ export default {
         },
         async resendEmail(){
             this.isLoading = true;
-            const res = await this.api.postData('/resendEmail', {username: this.username});
-            setTimeout(() => {
+            const res = await this.api.postData('/resendEmail', {email: this.email});
+            
                 this.text = res.data.message;
                 this.showLogin = true;
                 this.isLoading = false;
-            }, 1000);
+            
         }
     }
 }
