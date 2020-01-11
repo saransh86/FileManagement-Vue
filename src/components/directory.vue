@@ -42,7 +42,7 @@
                         <div v-for="(file) in files" :key="file">
                             <input type="checkbox" :value=file v-model="checkedFiles" class="delete" v-on:click="select">
                             <font-awesome-icon icon="file" size="2x"></font-awesome-icon>
-                            <span class="data"  v-on:click="download" :value=file> {{file}}</span>
+                            <span class="data"  :value=file> {{file}}</span>
                 
                 
                         </div>
@@ -73,7 +73,7 @@
             
             <md-dialog-actions >
                 <md-button class="md-primary" @click="createDirectoryModal = false">Close</md-button>
-                <md-button type="submit" class="md-primary" >Send</md-button>
+                <md-button type="submit" class="md-primary" >Create</md-button>
             </md-dialog-actions>
             </form>
         </md-dialog>
@@ -338,11 +338,18 @@ async beforeRouteUpdate(to, from, next) {
             }
             else
             {
+                var text;
+                if(result.data.status ==300){
+                    text = result.data.message;
+                }
+                else{
+                    text = allDirectories.data.message;
+                }
                 this.$notify({
                 group: 'notify',
                 title: 'Cannot load files and directories at this time.',
                 type: 'error',
-                text: "Uh ho. Something not right. Mind relogging?",
+                text: text,
                 duration: 10000
                 })
             } 
@@ -371,7 +378,7 @@ async beforeRouteUpdate(to, from, next) {
             else{
                 this.$notify({
                     group: 'notify',
-                    title: 'Uh ho! Something wrong!',
+                    title: 'Move error.',
                     type: 'error',
                     text: res.data.message,
                     duration: 10000
@@ -405,7 +412,7 @@ async beforeRouteUpdate(to, from, next) {
                     group: 'notify',
                     title: 'Cannot load directores at this time.',
                     type: 'error',
-                    text: "Uh ho. Something not right. Mind relogging?",
+                    text: res.data.message,
                     duration: 10000
                 })
            }
@@ -422,7 +429,7 @@ async beforeRouteUpdate(to, from, next) {
             if(res.data.status == 200){
                 this.$notify({
                             group: 'notify',
-                            title: 'Share Successful!',
+                            title: 'Share File Success!',
                             type: 'success',
                             text: res.data.message,
                             duration: 10000
@@ -434,7 +441,7 @@ async beforeRouteUpdate(to, from, next) {
             else{
                 this.$notify({
                     group: 'notify',
-                    title: 'Oops! Cannot share file at this time!',
+                    title: 'Share File error.',
                     type: 'error',
                     text: res.data.message,
                     duration: 10000
@@ -473,7 +480,7 @@ async beforeRouteUpdate(to, from, next) {
                     group: 'notify',
                     title: 'Upload existing files',
                     type: 'warn',
-                    text: "Hmm, seems the files you selected are already uploaded" ,
+                    text: "Files you selected are already uploaded" ,
                     duration: 10000
                     })  
                 }
@@ -498,7 +505,7 @@ async beforeRouteUpdate(to, from, next) {
                             group: 'notify',
                             title: 'Upload Success!',
                             type: 'success',
-                            text: "You. The. Man.",
+                            text: res.data.message,
                             duration: 10000
                         })
                         if(filesToUpload.length != files.length)
@@ -507,7 +514,7 @@ async beforeRouteUpdate(to, from, next) {
                             group: 'notify',
                             title: 'Upload existing files',
                             type: 'warn',
-                            text: "Um, some of the files you selected are already uploaded",
+                            text: "Files you selected are already uploaded",
                             duration: 10000
                             })
                         } 
@@ -520,9 +527,9 @@ async beforeRouteUpdate(to, from, next) {
                     {
                         this.$notify({
                             group: 'notify',
-                            title: 'Cannot confirm the upload.',
+                            title: 'Upload error.',
                             type: 'error',
-                            text: "Uh ho. Something not right.",
+                            text: res.data.message,
                             duration: 10000
                         })
                     }
@@ -549,7 +556,7 @@ async beforeRouteUpdate(to, from, next) {
                             group: 'notify',
                             title: 'Directory Created!',
                             type: 'success',
-                            text: "Whos the man! You the man!",
+                            text: res.data.message,
                             duration: 10000
                             })
                     
@@ -562,9 +569,9 @@ async beforeRouteUpdate(to, from, next) {
                     {
                         this.$notify({
                             group: 'notify',
-                            title: 'Something not right',
+                            title: 'Directory error.',
                             type: 'err',
-                            text: "Apologies, this is not normal.",
+                            text: res.data.message,
                             duration: 10000
                         }) 
                     }
@@ -592,9 +599,9 @@ async beforeRouteUpdate(to, from, next) {
                         await this.init();
                         this.$notify({
                             group: 'notify',
-                            title: 'Delete Successful for Files and Directories!',
+                            title: 'Delete Successful!',
                             type: 'success',
-                            text: "Feeling light!",
+                            text: "Delete successful for files and directories!",
                             duration: 10000
                         })   
                     }
@@ -604,11 +611,19 @@ async beforeRouteUpdate(to, from, next) {
                     }
                     else if(res[0].data.status == 300 || res[1].data.status == 300)
                     {
+                        var text;
+                        if(res[0].data.status == 300){
+                            text = res[0].data.message;
+                        }
+                        else{
+                            text = res[1].data.message;
+                        }
+                        
                         this.$notify({
                             group: 'notify',
-                            title: 'Delete Failed. Dammit!',
+                            title: 'Delete error.',
                             type: 'error',
-                            text: "Uh. Em. ok, yeah this suck.",
+                            text: text,
                             duration: 10000
                         })
                     }
@@ -627,7 +642,7 @@ async beforeRouteUpdate(to, from, next) {
                             group: 'notify',
                             title: 'Directory Delete Success!',
                             type: 'success',
-                            text: "Feeling light!",
+                            text: res.data.message,
                             duration: 10000
                         })
                     
@@ -640,9 +655,9 @@ async beforeRouteUpdate(to, from, next) {
                     {
                         this.$notify({
                             group: 'notify',
-                            title: 'Delete Directory Failed. Dammit!',
+                            title: 'Delete Directory error.',
                             type: 'error',
-                            text: "Uh. Em. ok, yeah this suck.",
+                            text: res.data.message,
                             duration: 10000
                         })
                     }
@@ -660,7 +675,7 @@ async beforeRouteUpdate(to, from, next) {
                             group: 'notify',
                             title: 'File Delete Success!',
                             type: 'success',
-                            text: "Feeling light!",
+                            text: res.data.message,
                             duration: 10000
                         })  
                     }
@@ -672,9 +687,9 @@ async beforeRouteUpdate(to, from, next) {
                     {
                         this.$notify({
                             group: 'notify',
-                            title: 'File Directory Failed. Dammit!',
+                            title: 'File Directory error.',
                             type: 'error',
-                            text: "Uh. Em. ok, yeah this suck.",
+                            text: res.data.message,
                             duration: 10000
                         })
                     }
@@ -700,7 +715,7 @@ async beforeRouteUpdate(to, from, next) {
             {
                  this.$notify({
                     group: 'notify',
-                    title: 'Mind Refreshing?',
+                    title: 'Download error.',
                     type: 'error',
                     text: res.data.message,
                     duration: 10000

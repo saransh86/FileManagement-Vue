@@ -10,9 +10,9 @@
                     <font-awesome-icon icon="user"></font-awesome-icon>
                     <span class="dropdown-text" > My Profile </span> 
                 </b-dropdown-item>
-                <b-dropdown-item href="/#/">
+                <b-dropdown-item>
                     <font-awesome-icon icon="sign-out-alt"></font-awesome-icon>
-                    <span class="dropdown-text" v-on:click="signOut"> Sign Out </span>
+                    <span class="dropdown-text" @click="signOut"> Sign Out </span>
                 </b-dropdown-item>
             </b-dropdown>
         </div>
@@ -51,7 +51,7 @@ export default {
                             group: 'notify',
                             title: 'Mind Refreshing?',
                             type: 'error',
-                            text: "Cannot logout at this time. Ugh! This sucks!",
+                            text:  res.data.message,
                             duration: 10000
                         })
                 } 

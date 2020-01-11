@@ -344,7 +344,7 @@ export default {
             this.registerPasswordConfirm = '';
             this.registerPasswordConfirmState = null;
         },
-        async handleRegister(bvModalEvt)
+        async handleRegister()
         {
             
             this.registerModal = false;
@@ -379,9 +379,9 @@ export default {
                         }) 
                 }
            
-            this.$nextTick(() => {
-                this.$refs.modal.hide()
-            })    
+            // this.$nextTick(() => {
+            //     this.$refs.modal.hide()
+            // })    
         },
         
         resetModal()
@@ -410,9 +410,9 @@ export default {
             
             const res = await api.postData('/forgotPassword', {email: this.email});
             // Hide the modal manually
-            this.$nextTick(() => {
-                this.$refs.modal.hide()
-            })
+            // this.$nextTick(() => {
+            //     this.$refs.modal.hide()
+            // })
         }
     }
 
