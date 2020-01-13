@@ -283,6 +283,7 @@ export default {
       }
     },
     async init() {
+      this.isLoading = true;
       this.path = "root/home";
       let api = new Api();
       const welcomePromise = api.getData("/home/welcome", { path: this.path });
@@ -292,6 +293,7 @@ export default {
         welcomePromise,
         allDirectoriesPromise
       ]);
+      this.isLoading = false;
       if (res.data.status == 200 && allDirectories.data.status == 200) {
         this.username = res.data.data.username;
         this.directories = res.data.data.directories;
@@ -493,9 +495,10 @@ export default {
         path: this.path
       });
 
-      this.isLoading = false;
+      
       if (res.data.status == 200) {
         this.directories.push(name.trim());
+        this.isLoading = false;
         this.$notify({
           group: "notify",
           title: "Directory Created!",
@@ -504,8 +507,10 @@ export default {
           duration: 10000
         });
       } else if (res.data.status == 401) {
+        this.isLoading = false;
         this.$router.push({ name: "login" });
       } else {
+        this.isLoading = false;
         this.$notify({
           group: "notify",
           title: "Directory error.",

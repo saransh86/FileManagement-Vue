@@ -210,7 +210,7 @@ async beforeRouteUpdate(to, from, next) {
         directoryName: [],
         path: '',
         apath: '',
-        url: "http://localhost:8080/#/",
+        url: "http://fileappsaransh.s3-website-us-east-1.amazonaws.com/#/",
 
         directories: [],
         files:[],
@@ -294,6 +294,7 @@ async beforeRouteUpdate(to, from, next) {
             this.shareToModal = true;
         },
         async init(){
+            this.isLoading = true;
             let directory = window.location.href.split("/");
             directory.splice(0, 4);
     
@@ -325,7 +326,7 @@ async beforeRouteUpdate(to, from, next) {
             //const allFilesPromise = api.getData('/user/get_files',{});
             const allDirectoriesPromise = api.getData('/user/get_directories', {});
             const [result, allDirectories] = await Promise.all([welcomePromise, allDirectoriesPromise]);
-   
+            this.isLoading = false;
             if(result.data.status == 200  && allDirectories.data.status==200)
             {   
                 this.directories = result.data.data.directories;
@@ -464,7 +465,7 @@ async beforeRouteUpdate(to, from, next) {
             let data = new FormData();
             this.isLoading = true;
            
-                this.isLoading = false;
+            
                 filesToUpload = lodash.filter(files, function(file){
                     if(this.files.indexOf(file.name) == -1)
                     {
@@ -476,6 +477,7 @@ async beforeRouteUpdate(to, from, next) {
                 data.append('path', this.path)
                 if(filesToUpload.length == 0)
                 {
+                    this.isLoading = false;
                     this.$notify({
                     group: 'notify',
                     title: 'Upload existing files',
@@ -488,6 +490,7 @@ async beforeRouteUpdate(to, from, next) {
                 {
                     let api = new Api();
                     const res = await api.postData('/file/upload', data);
+                    this.isLoading = false;
                     if(res.data.status == 200)
                     {
                         let currentpath = this.path.split(/\//);
@@ -583,14 +586,14 @@ async beforeRouteUpdate(to, from, next) {
             let api = new Api();
             this.isLoading = true;
             
-                this.isLoading = false;
+               
                 if(this.checkedFiles.length > 0 && this.checkedDirs.length> 0)
                 {
                     const resFiles =  api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
                     const resDirs =  api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path});
                
                     const res = await Promise.all([resFiles, resDirs]); 
-                
+                    this.isLoading = false;
                     if(res[0].data.status == 200 && res[1].data.status == 200)
                     {
                         // this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
@@ -634,6 +637,7 @@ async beforeRouteUpdate(to, from, next) {
                 {
                 //let api = new Api();
                     const res = await api.deleteFile('/file/delete_dir', {directoryName: this.checkedDirs, path: this.path})
+                    this.isLoading = false;
                     if(res.data.status == 200)
                     {
                         // this.directories = this.directories.filter(x => !this.checkedDirs.includes(x));
@@ -666,6 +670,7 @@ async beforeRouteUpdate(to, from, next) {
                 else if(this.checkedFiles.length > 0 && this.checkedDirs.length == 0)
                 {
                     const res = await api.deleteFile('/file/delete', {name: this.checkedFiles, path: this.path});
+                    this.isLoading = false;
                     if(res.data.status == 200)
                     {
                         // this.files = this.files.filter(x => !this.checkedFiles.includes(x));
@@ -706,7 +711,9 @@ async beforeRouteUpdate(to, from, next) {
         {
             
             let api = new Api();
+            this.isLoading = true;
             const res = await api.getData('/file/download',{file: this.checkedFiles, path: this.path},'blob');
+            this.isLoading = false;
             if(res.data.status == 401)
             {
                 this.$router.push({name: 'login'});
