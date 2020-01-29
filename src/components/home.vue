@@ -121,7 +121,7 @@
 
           <md-dialog-actions>
             <md-button class="md-primary" @click="createDirectoryModal = false">Close</md-button>
-            <md-button type="submit" class="md-primary">Create</md-button>
+            <md-button type="submit" class="md-primary" id="createDirectorySubmit">Create</md-button>
           </md-dialog-actions>
         </form>
       </md-dialog>
@@ -226,7 +226,7 @@ export default {
       createDirectoryModal: false,
       moveToModal: false,
       shareToModal: false,
-      url: "http://localhost:8080/#/",
+      url: Api.getUrl() + "/#/",
       api: new Api()
     };
   },

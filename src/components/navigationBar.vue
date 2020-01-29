@@ -36,7 +36,7 @@ export default {
     name: 'nav',
     data() {
         return {
-            url: "http://localhost:8080/#/",
+            url: Api.getUrl() + "/#/",
             allFiles: [],
             selected :null
         }

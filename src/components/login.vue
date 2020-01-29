@@ -42,15 +42,15 @@
                             
                             <div class="md-layout md-gutter">
                                 <div class="md-layout-item md-small-size-100">
-                                    <md-button :href="null" class="md-primary" :md-ripple=true @click="forgotPasswordModal = true">  Forgot Password</md-button>   
+                                    <md-button :href="null" class="md-primary" :md-ripple=true @click="forgotPasswordModal = true" id="forgotPasswordModal">  Forgot Password</md-button>   
                                 </div>
                             </div>
                         </md-card-content>
                         <md-progress-bar md-mode="indeterminate" v-if="sending" />
 
                         <md-card-actions md-alignment="space-between">
-                            <md-button class="md-primary" @click="registerModal = true"> Register </md-button>
-                            <md-button type="submit" class="md-primary" :disabled="sending">Login</md-button>
+                            <md-button class="md-primary" @click="registerModal = true" id="registerModal"> Register </md-button>
+                            <md-button type="submit" class="md-primary" :disabled="sending" id="loginSubmit">Login</md-button>
                         </md-card-actions>
       
                         </md-card>
@@ -60,8 +60,8 @@
 
         <!--Modal for forgot password -->
 
-        <md-dialog :md-active.sync="forgotPasswordModal" v-on:md-closed="clearForgotPasswordForm">
-            <md-dialog-title> Forgot Password? We got you! </md-dialog-title>
+        <md-dialog :md-active.sync="forgotPasswordModal" v-on:md-closed="clearForgotPasswordForm" >
+            <md-dialog-title id="forgotPasswordText"> Forgot Password? We got you! </md-dialog-title>
             <form novalidate class="md-layout-item md-size-100 md-medium-size-100" @submit.prevent="validateForgotPassword">
                 <md-dialog-content>
                     <div class="md-layout md-gutter">
@@ -300,11 +300,13 @@ export default {
         async handleLogin()
         {
            
-                this.sending = true;
+                //this.sending = true;
+                this.isLoading = true;
                 let api = new Api();
                 let res = await api.postData("/authenticate", {email: this.form.email, password: this.form.password});
                 
-                    this.sending= false;
+                    //this.sending= false;
+                    this.isLoading = false;
                     if(res.data.status == 300)
                     {
                         this.$notify({
@@ -348,7 +350,8 @@ export default {
         {
             
             this.registerModal = false;
-            this.sending = true;
+            //this.sending = true;
+            this.isLoading = true;
            
             /**
              * send the request to the back end
@@ -357,7 +360,8 @@ export default {
             
             const res = await api.postData('/register', {registerUsername: this.form.registerUsername, registerEmail: this.form.registerEmail, registerPassword: this.form.registerPassword}); 
             
-               this.sending = false;
+               //this.sending = false;
+               this.isLoading = false;
                if(res.data.status == 200)
                 {
                     this.$notify({

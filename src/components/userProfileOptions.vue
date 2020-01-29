@@ -29,7 +29,7 @@ export default {
     name: 'userOptions',
     data(){
         return{
-            url: "http://localhost:8080/#/",
+            url: Api.getUrl() + "/#/",
             isLoading: false,
             fullPage: true
         }

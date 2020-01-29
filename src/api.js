@@ -6,7 +6,9 @@ export class Api
         axios.defaults.withCredentials = true;
         this.url = "http://localhost:3000";   
     }
-
+    static getUrl() {
+        return "http://localhost:8080";
+    }
     postData(endpoint, data)
     {  
         return new Promise(async (resolve, reject) => {

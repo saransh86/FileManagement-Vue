@@ -67,7 +67,7 @@ export default {
     name: 'admin',
     data() {
         return {
-            url: "http://localhost:8080/#/",
+            url: Api.getUrl() + "/#/",
             users : [],
             selected : null,
             allSelected : false,

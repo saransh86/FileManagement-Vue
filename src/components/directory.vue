@@ -210,7 +210,7 @@ async beforeRouteUpdate(to, from, next) {
         directoryName: [],
         path: '',
         apath: '',
-        url: "http://fileappsaransh.s3-website-us-east-1.amazonaws.com/#/",
+        url: Api.getUrl() + "/#/",
 
         directories: [],
         files:[],
