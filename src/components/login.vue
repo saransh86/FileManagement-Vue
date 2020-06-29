@@ -1,24 +1,24 @@
 <template>
 
-    <div class="wrapper" >
+    <div class="wrapper md-layout" >
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-            <div class='login'>
+            <div class="md-layout-item">
                
                 <notifications group ="register" position="top center"/>
                 <notifications group ="login" position="top center"/>
 
 
-                    <form novalidate class="md-layout" @submit.prevent="validateUser">
+                    <form novalidate class="md-layout-item" @submit.prevent="validateUser">
 
-                        <md-card class="md-layout-item md-size-100 md-medium-size-100"> 
+                        <md-card class="md-layout-item"> 
 
                         <md-card-header>
                             <div class="md-title">File Management</div>
                         </md-card-header>
                         <md-card-content>
-                            <div class="md-layout md-gutter">
+                            <div class="md-layout-item md-gutter">
                                 <div class="md-layout-item md-small-size-100">
                                     <md-field :class="getValidationClass('email')">
                                         <label for="email"> Email </label>
@@ -29,7 +29,7 @@
                                 </div>
                             </div>
 
-                            <div class="md-layout md-gutter">
+                            <div class="md-layout-item md-gutter">
                                 <div class="md-layout-item md-small-size-100">
                                     <md-field :md-toggle-password="false" :class="getValidationClass('password')">
                                         <label for="password"> Password </label>
@@ -40,7 +40,7 @@
                                 </div>
                             </div>
                             
-                            <div class="md-layout md-gutter">
+                            <div class="md-layout-item md-gutter">
                                 <div class="md-layout-item md-small-size-100">
                                     <md-button :href="null" class="md-primary" :md-ripple=true @click="forgotPasswordModal = true" id="forgotPasswordModal">  Forgot Password</md-button>   
                                 </div>
@@ -160,7 +160,6 @@ import {
     required,
     email,
     minLength,
-    maxLength
   } from 'vuelidate/lib/validators'
 export default {
     name: 'login',
@@ -325,6 +324,7 @@ export default {
                     {
                         if(!res.data.isAdmin)
                         {
+                            this.$store.commit('getEmail', this.form.email);
                             this.$router.push({name: 'home'});
                         }
                         else
@@ -430,9 +430,15 @@ export default {
     left: 0;
   }
 
+.md-card {
+    width:320px;
+    margin: 4px;
+    display: inline-block;
+    vertical-align: top;
+}
 .wrapper {
   position: fixed;
-  top: 3%;
+  top: 20%;
   left: 5%;
   right: 5%;
   width: 90%;

@@ -1,161 +1,80 @@
 <template>
-<div>
-    <notifications group ="notify" position="top center"/>
-    <navBar/>
-    <div class="user-page">
+    <div class="page-container">
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        <div class="user-profile">
-        <form novalidate class="md-layout-item" @submit.prevent="validateProfile">
-            <md-card>
-                <md-card-header>
-                    <div v-if="!isAdmin">
-                        <a :href="url + '/welcome'"> <span class="md-title"> Home >  </span></a>
-                        <span class="md-title">My Profile</span>
-                    </div>
-                    <div v-else-if="isAdmin">
-                        <a :href="url + 'admin'"> <span class="md-title">Home > </span> </a>
-                        <span class="md-title">My Profile</span>
-                    </div>
-                    </md-card-header>
-                    <md-card-content>
-                        <div class="md-layout-item md-size-25">
-                            <md-field :class="getValidationClass('username')">
-                                <label for="username">Username</label>
-                                <md-input id="registerUsername" v-model="form.username"> </md-input>
-                                <span class="md-error" v-if="!$v.form.username.required">The username is required</span>
-                                <span class="md-error" v-else-if="!$v.form.username.minlength">Minimum length of username should be 5</span>
-                            </md-field>
+        <notifications group="notify" position="top center" />
+        <md-app>
+            <md-app-toolbar class="md-primary "> 
+                <md-button class="md-icon-button" @click="toggleMenu" v-if="!menuVisible">
+                    <font-awesome-icon icon="bars"></font-awesome-icon>
+                </md-button>
+                <h3 class="md-title md-layout-item" style="flex :1"> File Management </h3>
+                <div class="md-toolbar-section-end">
+                    <div class="md-layout-item">
+                        <div class="searchBar">
+                            <vue-select placeholder="Search Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="this.allFiles" ></vue-select>
                         </div>
+                    </div>
+                    <userOptions/>
+                </div>
+            </md-app-toolbar>
+            <md-app-drawer  :md-active.sync="menuVisible" md-persistent="mini" v-bind:style="styleObj">
+                <md-toolbar class="md-transparent" md-elevation="0">
+                    <span>
+                        Welcome {{username}}
+                    </span>
 
-                        <div class="md-layout-item md-size-25">
-                            <md-field :class="getValidationClass('username')">
-                                <label for="email"> Email </label>
-                                <md-input id="registerEmail" v-model="form.email"> </md-input>
-                                <span class="md-error" v-if="!$v.form.email.required">The email is required.</span>
-                                <span class="md-error" v-else-if="!$v.form.email.email">Invalid email.</span>
-                            </md-field>
+                    <div class="md-toolbar-section-end">
+                        <md-button class="md-icon-button md-dense" @click="toggleMenu">
+                            <font-awesome-icon icon="angle-left"></font-awesome-icon>
+                        </md-button>
+                    </div>
+                </md-toolbar>
+                <md-list>
+                </md-list>
+            </md-app-drawer>
+        
+            <md-app-content>
+                <md-list>
+                    <form novalidate class="md-layout-item" @submit.prevent="validateProfile">
+                    <md-list-item class="md-size-15">
+                        <div >
+                            <a :href="url + '/welcome'"> <span class="space"> Home </span></a>
+                            <span class="space"> > My Profile</span>
                         </div>
-
-                        
-
-                        <div class="md-layout-item md-size-25">
+                    </md-list-item>
+                    <md-list-item>
+                        <md-field :class="getValidationClass('username')" class="md-layout-item" >
+                            <label for="username">Username</label>
+                            <md-input id="registerUsername"  :placeholder="username" v-model="form.username " class="md-layout-item md-size-50"> </md-input>
+                            <span class="md-error" v-if="!$v.form.username.required">The username is required</span>
+                            <span class="md-error" v-else-if="!$v.form.username.minlength">Minimum length of username should be 5</span>
+                        </md-field>
+                    </md-list-item>
+                    <md-list-item>
+                        <md-field>
+                            <label for="email"> Email </label>
+                            <md-input id="registerEmail" :value=email disabled> </md-input>
+                        </md-field>
+                    </md-list-item>
+                    <md-list-item>
+                        <div class="md-layout-item">
                             <md-button id="changePassword" class="md-layout-item md-primary md-raised md-size-100" @click="changePasswordModal= true">Change Password</md-button>
                         </div>
-
-                        <div class="md-layout-item md-size-25">
+                    </md-list-item>
+                    <md-list-item>
+                        <div class="md-layout-item ">
                             <md-button type="submit" class="md-layout-item md-primary md-raised md-size-100">Update Profile</md-button>
                         </div>
-                    </md-card-content>
-            
-                </md-card>
-        </form>
-        </div>
-
-        <!-- <div class="user-profile">
-            <b-container class="main-container">
-                <b-row align-h="between">
-                    <b-col cols="auto">
-                        <div v-if="!isAdmin">
-                            <h4>
-                                <a :href="url + '/welcome'"> Home > </a>
-                                <span>My Profile</span>
-                            </h4>
-                        </div>
-                        <div v-else-if="isAdmin">
-                            <h4>
-                                <a :href="url + 'admin'"> Home > </a>
-                                <span>My Profile</span>
-                            </h4>
-                        </div>
-                    </b-col>
-                </b-row>
-                <b-row align-h="center">
-                    <b-col cols="auto" md=1>
-                        <font-awesome-icon icon="user" size="2x" class="input-container"></font-awesome-icon>
-                    </b-col>
-                    <b-col cols="auto" md=4>
-                        <b-form-group :state="usernameState" :invalid-feedback="invalidFeedbackUsername" class="input-container">
-                            <b-form-input id="registerUsername" v-model="username" :state="usernameState" required  class="input-group-text "> </b-form-input>
-                            </b-form-group>
-                    </b-col>
-                </b-row>
-
-                <b-row align-h="center">
-                    <b-col cols="auto" md=1>
-                        <font-awesome-icon icon="envelope" size="2x" class="input-container"></font-awesome-icon>
-                    </b-col>
-                    <b-col cols="auto" md=4>
-                        <b-form-group :state="emailState" :invalid-feedback="invalidFeedbackEmail" class="input-container">
-                            <b-form-input id="registerEmail" v-model="email" :state="emailState" required class="input-group-text "> </b-form-input>
-                        </b-form-group>
-                    </b-col>
-                </b-row>
-                <b-row align-h="center">
-                    <b-col cols="auto" md=1>
-                    </b-col>
-
-                    <b-col cols="auto" md=4>
-                        <b-form-group class="input-container">
-                            <button class="btn btn-success btn-block"  type="button"  v-b-modal.changePassword> Change Password </button>
-                        </b-form-group>
-                    </b-col>
-                </b-row>
-                <b-row align-h="center">
-                    <b-col cols="auto" md=1>   
-                    </b-col>
-                    <b-col cols="auto" md=4>
-                        <b-form-group class="input-container">
-                            <button class="btn btn-success btn-block"  type="button"  v-on:click="updateProfile"> Update </button>
-                        </b-form-group>
-                    </b-col>
-                </b-row>
-            </b-container>
-        </div> -->
-        <!-- <b-modal id='changePassword' ref="modal" title="Alright Lets do this!" @show="resetModal" @hidden="resetModal" @ok="handleChangePassword" ok-variant="success" cancel-variant="success">
-            <form ref="form" @submit.stop.prevent="handleChangePassword">
-                
-                    <b-container>    
-                        <b-row>
-                            <b-col cols="2">
-                                <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
-                            </b-col>
-                        <b-col align-self="center" cols="10">
-                            <b-form-group :state="currentPasswordState"  :invalid-feedback="invalidFeedbackCurrentPassword" class="input-container"> 
-                                <b-form-input id="currentPassword" type="password" v-model="currentPassword" :state="currentPasswordState"  required placeholder="Current Password" class="input-group-text"> </b-form-input>
-                             </b-form-group>
-                        </b-col>
-                        </b-row>
-
-                        <b-row>
-                            <b-col cols="2">
-                                <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
-                            </b-col>
-                            <b-col>
-                                <b-form-group :state="newPasswordState"  :invalid-feedback="invalidFeedbackNewPassword" class="input-container"> 
-                                    <b-form-input id="newPassword" type="password" v-model="newPassword" :state="newPasswordState"  required placeholder="New Password" class="input-group-text"> </b-form-input>
-                             </b-form-group> 
-                            </b-col>
-                        </b-row>
-
-                        <b-row>
-                            <b-col cols="2">
-                                <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
-                            </b-col>
-                            <b-col>
-                                <b-form-group :state="confirmNewPasswordState"  :invalid-feedback="invalidFeedbackConfirmNewPassword" class="input-container"> 
-                                    <b-form-input id="confirmNewPassword" type="password" v-model="confirmNewPassword" :state="confirmNewPasswordState"  required placeholder="Confirm New Password" class="input-group-text"> </b-form-input>
-                             </b-form-group> 
-                            </b-col>
-                        </b-row>
-                    </b-container>
-                
-            </form>
-        </b-modal> -->
+                    </md-list-item>
+                    </form>
+                </md-list>
+            </md-app-content>
+        </md-app>
 
         <!--Modal for change password-->
-        <md-dialog :md-active.sync="changePasswordModal" v-on:md-closed="clearUpdatePasswordForm">
+        <md-dialog :md-active.sync="changePasswordModal" v-on:md-closed="clearUpdatePasswordForm" @md-opened="hideDrawer" @md-closed="showDrawer">
             <md-dialog-title> Change Password </md-dialog-title>
             <form novalidate class="md-layout-item md-size-100 md-medium-size-100" @submit.prevent="validateChangePassword">
                 <md-dialog-content>
@@ -193,91 +112,54 @@
                 </md-dialog-actions>
             </form>
         </md-dialog>
+    </div>
 
-    </div>
-    </div>
 </template>
 
 <script>
+import userOptions from './userProfileOptions';
+import VueSelect from 'vue-select';
 import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
-import lodash from 'lodash';
-import navBar from './navigationBar';
-import userOptions from './userProfileOptions';
+
 import { validationMixin } from 'vuelidate';
 import {sameAs} from 'vuelidate/lib/validators';
 import {
     required,
-    email,
-    minLength,
-    maxLength
+    minLength
   } from 'vuelidate/lib/validators'
 export default {
     name: 'myProfile',
     mixins: [validationMixin],
     components: {
         Loading,
-        navBar,
+        VueSelect,
         userOptions
     },
-    async mounted(){
-        let api = new Api();
-        this.isLoading = true;
-        const res = await api.getData('/user/userProfile');
-        const resAdmin = await api.getData('/user/is_admin',{params: ''});
-        this.isAdmin = resAdmin.data.data;
-        
-            this.isLoading = false;
-            if(res.data.status == 200)
-            {
-                this.form.username = res.data.message.username;
-                this.form.email = res.data.message.email;
-                this.checkUsername = res.data.message.username;
-                this.checkEmail = res.data.message.email;
-            }
-            else if(res.data.status == 401)
-            {
-                this.$router.push({name: 'login'});
-            }
-            else 
-            {
-                this.$notify({
-                        group: 'notify',
-                        title: 'Mind Refreshing?',
-                        type: 'error',
-                        text: "Cannot get user details at this time. Embarassing...",
-                        duration: 10000
-                    })
-            }
-        
-        
+    async created(){
+        this.$store.dispatch('getFilesAndDirectories','root/home')
+    },
+    computed: {
+        allFiles() {
+            return this.$store.getters.getAllFiles;
+        },
+        username(){
+            return this.$store.getters.getUsername
+        },
+        email () {
+            return this.$store.getters.getEmail;
+        },
+        menuVisible(){
+            return this.$store.getters.getShowMenu;
+        }
     },
     data()
     {
         return {
             url: Api.getUrl() + "/#/",
-            //usernameState : null,
-
-            // currentPassword: '',
-            // currentPasswordState: null,
-            // invalidFeedbackCurrentPassword: '',
-
-            // newPassword: '',
-            // newPasswordState: null,
-            // invalidFeedbackNewPassword: '',
-
-            // confirmNewPassword: '',
-            // confirmNewPasswordState: null,
-            // invalidFeedbackConfirmNewPassword: '',
-
-            // emailState: null,
-            // username : '',
-            // email: '',
-            // invalidFeedbackEmail: '',
-            // invalidFeedbackUsername: '',
-            // currentUsername: '',
-            // currentEmail: '',
+            selected: null,
+            // menuVisible: false,
             checkUsername: null,
             checkEmail: null,
             isLoading: false,
@@ -289,9 +171,11 @@ export default {
                 newPassword:null,
                 confirmNewPassword: null,
                 username: null,
-                email: null
             },
             sending : false,
+            styleObj:{
+                zIndex: null
+            },
 
         }
     },
@@ -311,23 +195,32 @@ export default {
             username:{
                 required,
                 minLength: minLength(5)  
-            },
-            email:{
-                required,
-                email
             }
-
         }
     },
     methods:
-    {
+    { 
+        hideDrawer(){
+            this.styleObj.zIndex = "auto";
+        },
+        showDrawer(){
+            this.styleObj.zIndex=null;
+        },
+        toggleMenu () {
+            // this.menuVisible = !this.menuVisible;
+            let menu = !this.menuVisible;
+            this.$store.commit('getShowMenu', menu);
+        },
+        setSelected(value) {
+            location.href = value.path;
+        },
         getValidationClass (fieldName) {
         const field = this.$v.form[fieldName]
 
         if (field) {
             return {
                 'md-invalid': field.$invalid && field.$dirty
-            }
+                }
             }
         },
         clearUpdatePasswordForm(){
@@ -349,9 +242,8 @@ export default {
         },
         validateProfile(){
             this.$v.form.username.$touch();
-            this.$v.form.email.$touch();
             
-            if((!this.$v.form.username.$invalid && !this.$v.form.email.$invalid) && ((this.checkUsername != this.form.username) || (this.checkEmail != this.form.email))){
+            if((!this.$v.form.username.$invalid )){
                 this.updateProfile();
             }
         },
@@ -406,9 +298,10 @@ export default {
                 this.isLoading = true;
                 
                     this.isLoading = false;
-                    const res = await api.putData('/user/updateMyProfile',{myProfileUsername: this.form.username, myProfileEmail: this.form.email, originalEmail: this.checkEmail});
+                    const res = await api.putData('/user/updateMyProfile',{myProfileUsername: this.form.username});
                     if(res.data.status == 200)
                     {
+                        this.$store.commit('getUsername',this.form.username);
                         this.$notify({
                             group: 'notify',
                             title: 'Profile Update',
@@ -461,40 +354,36 @@ export default {
     
 }
 </script>
-<style scoped>
+<style>
+.md-drawer {
+    width: 230px;
+    max-width: calc(100vw - 125px);
+    border: 1px solid rgba(0,0,0, .12);
+}
+.md-app{
+    min-height: 350px;
+    border: 1px solid rgba(0,0,0, .12);   
+}
 
-.user-page{
-  position: fixed;;
-  right: 100px;
-  top: 60px;
-  left:100px;
-  padding: 20px;
-  background-color: white;
+.searchBar{
+    
+    background: white;
 }
-.user-profile{
-  position: relative;
-  background-color: white;
-  /* width: 50%; */
-  top: 100%;
-  margin: 0;
-  font-size: medium;
+.pointer {cursor: pointer;}
+.space{
+    color: black;
 }
-.input-container {
-  display: flex;
-  top: 10px;
-  margin-bottom: 15px;
-  position: relative;
-  justify-content: center;
+.md-dialog {
+    overflow: visible;
 }
-a {
-  text-decoration: none;
-  color: black;
+.md-dialog-content {
+    overflow: visible;
 }
-.main-container{
-    padding-right: 0px;
-    padding-left: 0px;
-    margin-right: 0px;
-    margin-left: 0px;
+.md-theme-default a  {
+    color: black;
 }
+/* a span{
+    color: black;
+} */
 
 </style>

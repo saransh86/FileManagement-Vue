@@ -1,58 +1,76 @@
 <template>
-<div>
-     <navigate />
-    <div class="index-page">
-       <div class="vld-parent">
+    <div class="page-container">
+        <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-           <md-card class="md-layout-item md-size-100 md-small-size-100" >
-               <md-card-header>
-                   <div class="md-title">Files shared with you..</div>
-               </md-card-header>
-                <md-tabs md-sync-route >
-                    <md-tab id="tab-home" md-label="Home" to="/" md-alignment="center" exact/>
-                    <md-tab id="tab-share" md-label="Shared" to="/share" md-alignment="center" exact/>
-                    
-                </md-tabs>
-               <md-card-content>
-                <div class="md-layout-item md-layout">
+        <notifications group="notify" position="top center" />
+        <md-app>
+            <md-app-toolbar class="md-primary "> 
+                <md-button class="md-icon-button" @click="toggleMenu" v-if="!menuVisible">
+                    <font-awesome-icon icon="bars"></font-awesome-icon>
+                </md-button>
+                <h3 class="md-title md-layout-item" style="flex :1"> File Management </h3>
+                <div class="md-toolbar-section-end">
+                    <div class="md-layout-item">
+                        <div class="searchBar">
+                            <vue-select placeholder="Search Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="this.allFiles" ></vue-select>
+                        </div>
+                    </div>
+                    <userOptions/>
                 </div>
-                
-                 <div class="md-layout">
-                   
-                    <md-button id="downloadFile" :disabled="checkedFiles.length==0" class="md-primary md-raised" v-on:click="download"> Download</md-button>
-                        
-                </div>  
+            </md-app-toolbar>
+            <md-app-drawer  :md-active.sync="menuVisible" md-persistent="mini" v-bind:style="styleObj">
+                <md-toolbar class="md-transparent" md-elevation="0">
+                    <span>Welcome {{username}}</span>
 
-                 <div  class="layout">
-                    <div :hidden="sharedFiles.length == 0">
-                        <input type="checkbox" class="delete" v-on:click="selectAll" v-model="allSelected">
+                    <div class="md-toolbar-section-end">
+                        <md-button class="md-icon-button md-dense" @click="toggleMenu">
+                            <font-awesome-icon icon="angle-left"></font-awesome-icon>
+                        </md-button>
                     </div>
-                    <div v-for="(files) in sharedFiles" :key="files.file" >
-                        <input type="checkbox" :value=files.file v-model="checkedFiles" class="delete" v-on:click="select">
-                        <font-awesome-icon icon="file" size="2x"></font-awesome-icon>
-                        <span class="data" :value=files.file> {{files.file}}</span>
-                        <span class="data" :value= files.sharedBy> (Shared by : {{files.sharedBy}}) </span>
-                    </div>
-                 </div>
-                <!-- <md-table v-model="sharedFiles" md-sort="file" md-sort-order="asc">
-                    <md-table-toolbar> 
-                        <h1 class="md-title">Files shared with you </h1>
-                    </md-table-toolbar>
-                    <md-table-row slot="md-table-row" slot-scope="{item}">
-                        <md-table-cell md-label="File Name" md-sort-by="file" v-on:click="download">{{item.file}} </md-table-cell>
-                        <md-table-cell md-label="Shared By" md-sort-by="sharedBy">{{item.sharedBy}} </md-table-cell>
-                    </md-table-row>
-                </md-table> -->
-
-               </md-card-content>
-           </md-card>
-
-    </div>
+                </md-toolbar>
+                <md-list>
+                    <md-list-item class="pointer" @click="download" :disabled="checkedFiles.length==0" id="submitDownload">
+                        <md-icon :disabled="checkedFiles.length==0">
+                            <font-awesome-icon icon="download"> </font-awesome-icon>
+                            <md-tooltip md-direction="right">Download</md-tooltip>
+                        </md-icon>
+                        <span class="md-list-item-text pointer">Download</span>
+                    </md-list-item>
+                </md-list>
+            </md-app-drawer>
+        
+            <md-app-content>
+                <md-tabs md-sync-route>
+                    <md-tab id="tab-home" md-label="Home" to="/" md-alignment="center" exact />
+                    <md-tab id="tab-share" md-label="Shared" to="/share" md-alignment="center" exact />
+                </md-tabs>
+                <div>
+                    <md-list>
+                        <md-list-item>
+                            <div :hidden="this.sharedFiles.length == 0">
+                                <md-checkbox class="md-primary" @change="selectAll" v-model="allSelected" />
+                            </div>
+                        </md-list-item>
+                        <div v-for="(files) in this.sharedFiles" :key="files.file">
+                            <md-list-item>
+                                <md-checkbox :value="files.file" v-model="checkedFiles" class="md-primary" @change="select"/>
+                                <md-icon>
+                                    <font-awesome-icon icon="file"></font-awesome-icon>
+                                </md-icon>
+                                <span class="md-list-item-text space" :value="files.file">{{files.file}}</span>
+                                <!-- <span class="md-list-item-text space" :value= files.sharedBy> (Shared by : {{files.sharedBy}}) </span> -->
+                            </md-list-item>
+                        </div>
+                    </md-list>
+                </div>
+            </md-app-content>
+        </md-app>
     </div>
 </template>
 <script>
-import navigate from './navigationBar';
+import userOptions from './userProfileOptions';
+import VueSelect from 'vue-select';
 import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
@@ -60,43 +78,39 @@ export default {
     name: "share",
     data(){
         return {
-            sharedFiles: [],
+            // menuVisible: false,
             checkedFiles : [],
             api: new Api(),
             isLoading: false,
             fullPage: true,
             allSelected : false,
+            selected: null,
+            styleObj:{
+                zIndex: null
+            },
         }
     },
-    async mounted(){
-        let res = await this.api.getData('/file/get_shared_files',{});
-        this.isLoading = true;
-        
-            this.isLoading = false;
-
-            if(res.data.status == 200)
-            {
-                this.sharedFiles = res.data.data;
-            }
-            else if(res.data.status == 401)
-            {
-                this.$router.push({name: 'login'});
-            }
-            else 
-            {
-                this.$notify({
-                        group: 'notify',
-                        title: 'Mind Refreshing?',
-                        type: 'error',
-                        text: "Cannot get user details at this time. Embarassing...",
-                        duration: 10000
-                    })
-            }
-       
+    async created(){
+        this.$store.dispatch('getSharedFiles');
+    },
+    computed:{
+        sharedFiles() {
+            return this.$store.getters.getSharedFiles;
+        },
+        allFiles(){
+            return this.$store.getters.getAllFiles
+        },
+        username(){
+            return this.$store.getters.getUsername
+        },
+        menuVisible(){
+            return this.$store.getters.getShowMenu;
+        }
     },
     components:{
-        navigate,
-        Loading
+        Loading,
+        VueSelect,
+        userOptions
     },
     methods: {
         async download()
@@ -138,59 +152,58 @@ export default {
             } 
         },
         
-    selectAll()
-    {
-        this.checkedFiles = [];
-        if(!this.allSelected)
-        {
-            for(var i =0; i<this.sharedFiles.length; i++)
-            {
-                this.checkedFiles.push(this.sharedFiles[i].file);
-            }
-        }
-        else{
+        selectAll() {
             this.checkedFiles = [];
-            this.checkedDirs = [];
-        }
-    },
-    select()
-    {
-        this.allSelected = false;
-    }
-       
+            if(this.allSelected) {
+                for(var i =0; i<this.sharedFiles.length; i++) {
+                    this.checkedFiles.push(this.sharedFiles[i].file);
+                }
+            }
+            else {
+                this.checkedFiles = [];
+                this.checkedDirs = [];
+            }
+        },
+        select() {
+            this.allSelected = false;
+        },
+        setSelected(value) {
+            location.href = value.path;
+        }, 
+        toggleMenu () {
+            let menu = !this.menuVisible;
+            this.$store.commit('getShowMenu', menu);
+        },
     }
 }
 </script>
 <style scoped>
-.index-page{
-  position:fixed;
-  right: 100px;
-  top: 60px;
-  left:100px;
-  padding: 20px;
-  background-color: white;
-  /* overflow:auto; */
-  
+.md-drawer {
+    width: 230px;
+    max-width: calc(100vw - 125px);
+    border: 1px solid rgba(0,0,0, .12);
 }
-.data
-{
-    font-size: 22px; 
-    border-top: none !important;
-    white-space: nowrap;  
+.md-app{
+    min-height: 350px;
+    border: 1px solid rgba(0,0,0, .12);   
 }
-.layout {
-    position: relative;
-    /* right: 100px; */
-    top: 20px;
-    /* left:inherit;
-    right: inherit; */
-    /*padding: 20px; */
-    background-color: white;
-    overflow: scroll;
-    max-height: 300px;  
+
+.searchBar{
+    
+    background: white;
 }
-.delete{
-    position: inherit;
-    margin-right: 10px;
+.pointer {cursor: pointer;}
+.space{
+    margin-left: 5px;
+    color: black;
+}
+.md-dialog {
+    overflow: visible;
+}
+.md-dialog-content {
+    overflow: visible;
+}
+.md-theme-default a  {
+    color: black;
 }
 </style>

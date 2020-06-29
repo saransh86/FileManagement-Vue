@@ -19,11 +19,12 @@ import verifyRegistration from './components/verifyRegistration'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faFile, faUser, faEnvelope, faKey, faFolderOpen, faTrashAlt, faUserCircle, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
+import { faFile, faUser, faEnvelope, faKey, faFolderOpen, faTrashAlt, faUserCircle, faSignOutAlt, faUpload, faBars, faAngleLeft, faPeopleCarry, faShare, faDownload} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import VueCookies from 'vue-cookies';
 import {Api} from './api';
-library.add(faFile, faUser, faEnvelope, faKey, faFolderOpen, faTrashAlt, faUserCircle, faSignOutAlt)
+import store from './store/store';
+library.add(faFile, faUser, faEnvelope, faKey, faFolderOpen, faTrashAlt, faUserCircle, faSignOutAlt, faUpload, faBars, faAngleLeft, faPeopleCarry, faShare, faDownload)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.use(BootstrapVue)
@@ -125,18 +126,19 @@ router.beforeEach(async (to, from, next) => {
     
     if(res.data.status == 200)
     {
-      console.log("all good from jwt,", res);
+      //console.log("all good from jwt,", res);
       next();
     }
     else if(res.data.status == 401)
     {
-      console.log("JWT issue,", res);
+      //console.log("JWT issue,", res);
       next({name: 'login'});
     }
   }
 })
   
 new Vue({
+  store,
   router
 }).$mount('#app')
 

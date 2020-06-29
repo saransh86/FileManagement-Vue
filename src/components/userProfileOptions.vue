@@ -1,10 +1,11 @@
 <template>
    
-    <div class="userOptions">
+    <div >
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-            <b-dropdown variant="md-layout">
+        <md-menu md-size="medium" md-align-trigger>
+            <!-- <b-dropdown variant="md-layout">
                 <template slot="button-content">
                     <font-awesome-icon icon="user-circle" size="2x" class="icon"></font-awesome-icon>      
                 </template>
@@ -16,7 +17,21 @@
                     <font-awesome-icon icon="sign-out-alt"></font-awesome-icon>
                     <span class="dropdown-text" @click="signOut"> Sign Out </span>
                 </b-dropdown-item>
-            </b-dropdown>
+            </b-dropdown> -->
+            <md-button md-menu-trigger>
+                <font-awesome-icon icon="user-circle" size="2x" class="icon"></font-awesome-icon>
+            </md-button>
+            <md-menu-content> 
+                <md-menu-item  v-bind:href="url + 'myProfile'">
+                    <!-- <font-awesome-icon icon="user"></font-awesome-icon> -->
+                    <span> My Profile </span>
+                </md-menu-item>
+                <md-menu-item>
+                    <!-- <font-awesome-icon icon="sign-out-alt"></font-awesome-icon> -->
+                    <span @click="signOut">Sign Out </span>
+                </md-menu-item>
+            </md-menu-content>
+        </md-menu>
         </div>
    
 </template>
@@ -43,18 +58,18 @@ export default {
             let api = new Api();
             this.isLoading = true;
             const res = await api.getData('/home/logout',{});
-            
-            console.log("LOGOUT", res);
             this.isLoading = false;
             if(res.data.status == 200)
                 {
+                    this.$store.dispatch('reset');
                     this.$router.push({name: 'login'});
                 }
-                else if(res.data.status == 401)
+            else if(res.data.status == 401)
                 {
+                    this.$store.dispatch('reset');
                     this.$router.push({name: 'login'});
                 }
-                else 
+            else 
                 {
                     this.$notify({
                             group: 'notify',
@@ -64,6 +79,7 @@ export default {
                             duration: 10000
                         })
                 } 
+            
        
         }
     }
