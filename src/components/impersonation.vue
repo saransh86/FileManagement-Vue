@@ -57,7 +57,6 @@ export default {
         this.isLoading = true;
         let api = new Api();
         const is_admin = await api.getData('/user/is_admin',{params: ''});
-        console.log("IS Admin:", is_admin);
         if(!is_admin.data.data){
             this.$router.push({name: 'home'});
         }
@@ -66,7 +65,6 @@ export default {
             this.isLoading = false;
             if(res.data.status == 200)
             {
-                console.log("Got the data", res);
                 this.allUsers = res.data.data;
             }
             else if (res.data.status == 401)
@@ -75,8 +73,6 @@ export default {
             }
             else
             {
-                console.log("oops! Error!", res);
-            
                 this.$notify({
                     group: 'notify',
                     title: 'Cannot load files at this time.',
@@ -103,12 +99,10 @@ export default {
     },
     methods: {
         async setSelected(value) {
-            console.log("On change", value);
             this.isLoading = true;
             let api = new Api();
             const res = await api.getData('/user/get_files',{userImpersonation: value});
             this.isLoading = false;
-            console.log("User impsersomation : ", res);
             this.files = res.data.data;
             //  trigger a mutation, or dispatch an action  
         }

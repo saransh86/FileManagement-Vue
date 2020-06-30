@@ -67,7 +67,7 @@ export default {
     name: 'admin',
     data() {
         return {
-            url: "http://localhost:8080/#/",
+            url: Api.getUrl() + "/#/",
             users : [],
             selected : null,
             allSelected : false,
@@ -83,7 +83,7 @@ export default {
          * Check if user is admin first
          */
         const is_admin = await api.getData('/user/is_admin',{params: ''});
-        console.log("IS Admin:", is_admin);
+       
         if(!is_admin.data.data){
             this.$router.push({name: 'home'});
         }
@@ -91,7 +91,6 @@ export default {
             const res = await api.getUsers('/home/getusers')
             if(res.data.status == 200)
             {
-                console.log("Got the data", res);
                 this.users = res.data.data;
             }
             else if (res.data.status == 401)
@@ -100,7 +99,6 @@ export default {
             }
             else
             {
-                console.log("oops! Error!", res);
                 this.$notify({
                     group: 'notify',
                     title: 'Cannot load files at this time.',
@@ -146,7 +144,6 @@ export default {
        
         },
         async deleteUser(){
-            console.log(this.checkedUsers);
             this.isLoading = true;
             setTimeout(async() => {
                 this.isLoading = false;
@@ -170,7 +167,6 @@ export default {
         },
         selectAll()
         {
-            console.log("ALL SELECTED", this.allSelected);
             this.checkedUsers = [];
             if(!this.allSelected)
             {

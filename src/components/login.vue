@@ -1,158 +1,152 @@
 <template>
 
-    <div class="wrapper" >
+    <div class="wrapper md-layout" >
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        <font-awesome-icon icon="file" size="lg"/> 
-            <div class='login'>
-                <span class='login-title'>
-                    File Management
-                </span>
+            <div class="md-layout-item">
+               
                 <notifications group ="register" position="top center"/>
                 <notifications group ="login" position="top center"/>
-                <div class='login-container'>
-                    
-                    <div class='input-container'>
-                        <input type="username" id="username" v-model="username" name="username" class="input-group-text col-11" placeholder="Username" required>
-                    </div>
-                    <div class="input-container">
-                        <input type="password" id="password" v-model="password" name="password"  class="input-group-text col-11" placeholder="Password" required>
-                    </div>
-                    <div class="input-container">
-                        <a id='forgotPassword' href='#' v-b-modal.forgetPassword>Forgot Password? </a>
-                        
-                    </div>
-                    <div class="input-container">
-                        <button id="submitLogin" type="button" v-on:click="handleLogin" class="btn btn-success btn col-11"> Login </button>
-                    </div>
-                    <div class="input-container">
-                        <span>Not Registered ? </span>
-                        <a id="register" href='#' v-b-modal.registerModal> Create an account </a>
-                    </div>
-                </div>
-                <!-- <b-container class="login-container">
-                    <b-row >
-                         <b-col cols="2">
-                                    <font-awesome-icon icon="user" size="2x" class="input-container"></font-awesome-icon>
-                                </b-col>
-                        <b-col cols=10 class="input-container">
-                            <input type="username" id="username" v-model="username" name="username" class="input-group-text" placeholder="Username" required>
-                        </b-col>
-                    </b-row>
-                    <b-row align-h="center">
-                         <b-col cols="2">
-                                    <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
-                                </b-col>
-                        <b-col cols=10 class="input-container">
-                            <input type="password" id="password" v-model="password" name="password"  class="input-group-text" placeholder="Password" required>
-                        </b-col>
-                    </b-row>
-                    <b-row align-h="center">
-                        <b-col cols="auto" class="input-container">
-                            <a id='forgotPassword' href='#' v-b-modal.forgetPassword>Forgot Password? </a>
-                        </b-col>
-                    </b-row>
-                    <b-row >
-                        <b-col cols=12 class="input-container">
-                           <button id="submitLogin" type="button" v-on:click="handleLogin" class="btn btn-primary btn-block"> Login </button>
-                        </b-col>
-                    </b-row>
-                    <b-row >
-                        <b-col cols=12 class="input-container">
-                           <span>Not Registered ? </span>
-                        <a id="register" href='#' v-b-modal.registerModal> Create an account </a>
-                        </b-col>
-                    </b-row>
-                </b-container> -->
+
+
+                    <form novalidate class="md-layout-item" @submit.prevent="validateUser">
+
+                        <md-card class="md-layout-item"> 
+
+                        <md-card-header>
+                            <div class="md-title">File Management</div>
+                        </md-card-header>
+                        <md-card-content>
+                            <div class="md-layout-item md-gutter">
+                                <div class="md-layout-item md-small-size-100">
+                                    <md-field :class="getValidationClass('email')">
+                                        <label for="email"> Email </label>
+                                         <md-input name="email" id="email" v-model="form.email" :disabled="sending" />
+                                        <span class="md-error" v-if="!$v.form.email.required">The email is required.</span>
+                                        <span class="md-error" v-else-if="!$v.form.email.minlength">Invalid email.</span>
+                                    </md-field>
+                                </div>
+                            </div>
+
+                            <div class="md-layout-item md-gutter">
+                                <div class="md-layout-item md-small-size-100">
+                                    <md-field :md-toggle-password="false" :class="getValidationClass('password')">
+                                        <label for="password"> Password </label>
+                                        <md-input name="password" type="password" id="password" v-model="form.password" :disabled="sending" />
+                                        <span class="md-error" v-if="!$v.form.password.required">The password is required.</span>
+                                        <span class="md-error" v-else-if="!$v.form.password.minlength">Minimum length of password should be 6.</span>
+                                    </md-field>
+                                </div>
+                            </div>
+                            
+                            <div class="md-layout-item md-gutter">
+                                <div class="md-layout-item md-small-size-100">
+                                    <md-button :href="null" class="md-primary" :md-ripple=true @click="forgotPasswordModal = true" id="forgotPasswordModal">  Forgot Password</md-button>   
+                                </div>
+                            </div>
+                        </md-card-content>
+                        <md-progress-bar md-mode="indeterminate" v-if="sending" />
+
+                        <md-card-actions md-alignment="space-between">
+                            <md-button class="md-primary" @click="registerModal = true" id="registerModal"> Register </md-button>
+                            <md-button type="submit" class="md-primary" :disabled="sending" id="loginSubmit">Login</md-button>
+                        </md-card-actions>
+      
+                        </md-card>
+                    </form>  
                
             </div>    
-       
+
+        <!--Modal for forgot password -->
+
+        <md-dialog :md-active.sync="forgotPasswordModal" v-on:md-closed="clearForgotPasswordForm" >
+            <md-dialog-title id="forgotPasswordText"> Forgot Password? We got you! </md-dialog-title>
+            <form novalidate class="md-layout-item md-size-100 md-medium-size-100" @submit.prevent="validateForgotPassword">
+                <md-dialog-content>
+                    <div class="md-layout md-gutter">
+                        <div class="md-layout-item md-small-size-100">
+                            <md-field :class="getValidationClass('forgotPassword')">
+                                <label for="forgotPassword" > Email </label>
+                                <md-input name="forgotPassword" id="forgotPassword" v-model="form.forgotPassword" :disabled="sending"> </md-input>
+                                <span class="md-error" v-if="!$v.form.forgotPassword.required">The email is required.</span>
+                                <span class="md-error" v-else-if="!$v.form.forgotPassword.email">Invalid email.</span>
+                            </md-field>
+                        </div>
+                    </div>
+                 </md-dialog-content>
+             <md-progress-bar md-mode="indeterminate" v-if="sending" />
+            <md-dialog-actions >
+                <md-button class="md-primary" @click="forgotPasswordModal = false">Close</md-button>
+                <md-button type="submit" class="md-primary" :disabled="sending" >Send</md-button>
+            </md-dialog-actions>
+            </form>
+        </md-dialog>
+
+        <!--Modal for material design-->
+        <md-dialog :md-active.sync="registerModal" v-on:md-closed="clearRegisterForm" >
+            <md-dialog-title> Register </md-dialog-title>
             
-       
-
-        <b-modal id='registerModal' ref="modal" title="Register For Awesomeness!" @show="resetModalRegister" @hidden="resetModalRegister" @ok="handleRegister" ok-variant="success" cancel-variant="success">
-            <form ref="form" @submit.stop.prevent="handleRegister">
-                
-                    <b-container>
-                       
-                            
-                            <b-row>
-                                <b-col cols="2">
-                                    <font-awesome-icon icon="user" size="2x" class="input-container"></font-awesome-icon>
-                                </b-col>
-                                <b-col align-self="center" cols="10">
-                                     <b-form-group :state="registerUsernameState" :invalid-feedback="invalidFeedbackUsername" class="input-container">
-                                        <b-form-input id="registerUsername" v-model="registerUsername" :state="registerUsernameState" required placeholder="Username" class="input-group-text col-11"> </b-form-input>
-                                     </b-form-group>
-                                </b-col>
-                            </b-row>
-                       
-                    <!-- </b-container>
+            
+               <form novalidate class ="md-layout-item md-size-100 md-medium-size-100" @submit.prevent="validateRegisterUser">
+                <md-dialog-content>
+                    <div class="md-layout md-gutter"> 
+                      
+                        <div class="md-layout-item md-small-size-100">
+                            <md-field :class="getValidationClass('registerUsername')">
+                                <label for="registerUsername" > Username </label>
+                                <md-input name="registerUsername" id="registerUsername" v-model="form.registerUsername" :disabled="sending"> </md-input>
+                                <span class="md-error" v-if="!$v.form.registerUsername.required">The username is required.</span>
+                                <span class="md-error" v-else-if="!$v.form.registerUsername.minlength">Minimum length of username should be 5.</span>
+                            </md-field>
+                        </div>
+                    </div>
                     
-                <b-container>      -->
-                            <b-row>
-                                <b-col cols="2">
-                                    <font-awesome-icon icon="envelope" size="2x" class="input-container"></font-awesome-icon>
-                                </b-col>
-                                <b-col align-self="center" cols="10">
-                                    <b-form-group :state="registerEmailState" :invalid-feedback="invalidFeedbackEmail" class="input-container">
-                                        <b-form-input id="registerEmail" v-model="registerEmail" :state="registerEmailState" required placeholder="Email" class="input-group-text col-11"> </b-form-input>
-                                     </b-form-group>
-                                </b-col>
-                            </b-row>
-                       
-                <!-- </b-container>
+               
+                    
+                    <div class="md-layout md-gutter"> 
+                        <div class="md-layout-item md-small-size-100">
+                            <md-field :class="getValidationClass('registerEmail')">
+                                <label for="registerEmail" > Email </label>
+                                <md-input name="registerEmail" id="registerEmail" v-model="form.registerEmail" :disabled="sending"> </md-input>
+                                <span class="md-error" v-if="!$v.form.registerEmail.required">The email is required.</span>
+                                <span class="md-error" v-else-if="!$v.form.registerEmail.email">Invalid email.</span>
+                            </md-field>
+                         
+                        </div>
+                    </div>
 
-                <b-container>  -->
-                            <b-row>
-                                <b-col cols="2">
-                                    <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
-                                </b-col>
-                                <b-col align-self="center" cols="10">
-                                    <b-form-group :state="registerPasswordState" :invalid-feedback="invalidFeedbackPassword" class="input-container">
-                                        <b-form-input id="registerPassword" type="password" v-model="registerPassword" :state="registerPasswordState" required placeholder="Password" class="input-group-text col-11"> </b-form-input>
-                                    </b-form-group>
-                                </b-col>
-                            </b-row>
-                        
-                <!-- </b-container>
-                
+                    <div class="md-layout md-gutter">
+                        <div class="md-layout-item md-small-size-100">
+                            <md-field :class="getValidationClass('registerPassword')">
+                                <label for="registerPassword"> Password </label>
+                                <md-input name="registerPassword" type="password" id="registerPassword" v-model="form.registerPassword" :disabled="sending"> </md-input>
+                                <span class="md-error" v-if="!$v.form.registerPassword.required">The password is required.</span>
+                                <span class="md-error" v-else-if="!$v.form.registerPassword.minlength">Minimum length of password should be 6.</span>
+                            </md-field>
+                        </div>
+                    </div>
 
-                <b-container>   -->
-                            <b-row>
-                                <b-col cols="2">
-                                    <font-awesome-icon icon="key" size="2x" class="input-container"></font-awesome-icon>
-                                </b-col>
-                                <b-col align-self="center" cols="10">
-                                    <b-form-group :state="registerPasswordConfirmState" :invalid-feedback="invalidFeedbackConfirmPassword" class="input-container">
-                                        <b-form-input id="registerPasswordConfirm" type="password" v-model="registerPasswordConfirm" :state="registerPasswordConfirmState" required placeholder="Confirm Password" class="input-group-text col-11"> </b-form-input>
-                                    </b-form-group>
-                                </b-col>
-                            </b-row>
-                        
-                </b-container>
+                    <div class="md-layout md-gutter">
+                        <div class="md-layout-item md-small-size-100">
+                            <md-field :class="getValidationClass('registerPasswordConfirm')">
+                                <label for="registerPasswordConfirm"> Confirm Password </label>
+                                <md-input name="registerPasswordConfirm" type="password" id="registerPasswordConfirm" v-model="form.registerPasswordConfirm" :disabled="sending"> </md-input>
+                               
+                                <span class="md-error" v-if="!$v.form.registerPasswordConfirm.sameAsPassword">Password and Confirm Password do not match.</span> 
+                            </md-field>
+                        </div>
+                    </div>
+                    
+               
+            </md-dialog-content>
+             <md-progress-bar md-mode="indeterminate" v-if="sending" />
+            <md-dialog-actions >
+                <md-button class="md-primary" @click="registerModal = false">Close</md-button>
+                <md-button type="submit" class="md-primary" :disabled="sending" >Save</md-button>
+            </md-dialog-actions>
             </form>
-        </b-modal>
-
-         <b-modal id='forgetPassword' ref="modal1" title="Forgot your Password? We got you!" @show="resetModal" @hidden="resetModal" @ok="handleForgotPassword" ok-variant="success" cancel-variant="success">
-            <form ref="form1" @submit.stop.prevent="handleSubmitForgetPassword">
-                
-                    <b-container>    
-                        <b-row>
-                            <b-col cols="2">
-                                <font-awesome-icon icon="envelope" size="2x" class="input-container"></font-awesome-icon>
-                            </b-col>
-                        <b-col align-self="center" cols="10">
-                            <b-form-group :state="emailState"  :invalid-feedback="invalidFeedback" class="input-container"> 
-                                <b-form-input id="email-input" v-model="email" :state="emailState"  required placeholder="Your Email?" class="input-group-text"> </b-form-input>
-                             </b-form-group>
-                        </b-col>
-                        </b-row>
-                    </b-container>
-                
-            </form>
-        </b-modal>
+        </md-dialog>
     </div>
 </template>
 
@@ -160,67 +154,160 @@
 import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
+import { validationMixin } from 'vuelidate';
+import {sameAs} from 'vuelidate/lib/validators';
+import {
+    required,
+    email,
+    minLength,
+  } from 'vuelidate/lib/validators'
 export default {
     name: 'login',
-   
+    mixins: [validationMixin],
     data(){
         return {
-
-            username: '',
-            password: '',
-
-            email: '',
-            emailState: null,
-            invalidFeedback : '',
-
-            registerUsername: '',
-            registerUsernameState: null,
-            invalidFeedbackUsername: '',
-
-            registerEmail: '',
-            registerEmailState:null,
-            invalidFeedbackEmail : '',
-
-            registerPassword: '',
-            registerPasswordState: null,
-            invalidFeedbackPassword: '',
-           
-            registerPasswordConfirm: '',
-            registerPasswordConfirmState: null,
-            invalidFeedbackConfirmPassword: '',
-
             isLoading: false,
-            fullPage: true
+            fullPage: true,
+
+            form :{
+                email: null,
+                password: null,
+                registerUsername: null,
+                registerEmail: null,
+                registerPassword: null,
+                registerPasswordConfirm: null,
+                forgotPassword: null
+            },
+            sending : false,
+            registerModal: false,
+            forgotPasswordModal: false,
+            api: new Api()
+        }
+    },
+    validations: {
+        form : {
+            email: {
+                required,
+                email
+            },
+            password: {
+                required,
+                minLength: minLength(6)
+            },
+            registerUsername :{
+                required,
+                minLength: minLength(5)
+            },
+            registerEmail: {
+                required,
+                email
+            },
+            registerPassword: {
+                required,
+                minLength: minLength(6)
+            },
+            registerPasswordConfirm: {
+                sameAsPassword : sameAs('registerPassword')
+            },
+            forgotPassword: {
+                required,
+                email
+            }
         }
     },
     components: {
             Loading
         },
     methods: {
+
+        clearForgotPasswordForm(){
+            this.form.forgotPassword = null;
+            this.$v.form.forgotPassword.$reset();
+        },
+        clearRegisterForm(){
+            this.form.registerUsername= null;
+            this.form.registerEmail= null;
+            this.form.registerPassword= null;
+            this.form.registerPasswordConfirm = null;
+
+            this.$v.form.registerUsername.$reset();
+            this.$v.form.registerEmail.$reset();
+            this.$v.form.registerPasswordConfirm.$reset();
+            this.$v.form.registerPassword.$reset();
+        },
+        validateForgotPassword(){
+            this.$v.form.forgotPassword.$touch();
+            if(!this.$v.form.forgotPassword.$invalid){
+                this.sendPasswordResetEmail();
+            }
+        },
+         validateRegisterUser(){
+             this.$v.form.registerUsername.$touch();
+             this.$v.form.registerEmail.$touch();
+             this.$v.form.registerPassword.$touch();
+             this.$v.form.registerPasswordConfirm.$touch();
+             if(!this.$v.form.registerUsername.$invalid && !this.$v.form.registerEmail.$invalid && !this.$v.form.registerPassword.$invalid && !this.$v.form.registerPasswordConfirm.$invalid){
+                 this.handleRegister();
+             }
+             else{
+                 console.log("form not fixed!");
+             }
+         },
+         validateUser () {
+            this.$v.form.email.$touch();
+            this.$v.form.password.$touch();
+
+            if (!this.$v.form.email.$invalid && !this.$v.form.password.$invalid) {
+                this.handleLogin()
+            }
+        },
+        async sendPasswordResetEmail(){
+            const email = this.form.forgotPassword;
+            this.forgotPasswordModal = false;
+            this.isLoading = true;
+            const res = await this.api.postData('/forgotPassword',{email: email});
+                this.isLoading = false;
+                if(res.data.status == 200){
+                    this.$notify({
+                        group: 'login',
+                        title: 'Email Sent!',
+                        type: 'success',
+                        text: res.data.message,
+                        duration: 10000
+                    })
+                }
+                else{
+                    this.$notify({
+                        group: 'login',
+                        title: 'Email error!',
+                        type: 'error',
+                        text: res.data.message,
+                        duration: 10000
+                    })
+                }
+            
+        },
+        getValidationClass (fieldName) {
+        const field = this.$v.form[fieldName]
+
+        if (field) {
+          return {
+            'md-invalid': field.$invalid && field.$dirty
+          }
+        }
+      },
         async handleLogin()
         {
-            if(this.username == '' || this.password =='')
-            {
-                console.log("\n Im  in the if block!");
-                this.$notify({
-                        group: 'login',
-                        title: 'Login error!',
-                        type: 'error',
-                        text: "Empty Username or Password!",
-                        duration: 10000      
-                })
-                return;
-            }
-            else
-            {
+           
+                //this.sending = true;
                 this.isLoading = true;
                 let api = new Api();
-                let res = await api.postData("/authenticate", {username: this.username, password: this.password});
-                setTimeout(() => {
+                let res = await api.postData("/authenticate", {email: this.form.email, password: this.form.password});
+                
+                    //this.sending= false;
                     this.isLoading = false;
                     if(res.data.status == 300)
                     {
-                        console.log("Notify Error!");
                         this.$notify({
                             group: 'login',
                             title: 'Login error!',
@@ -237,6 +324,7 @@ export default {
                     {
                         if(!res.data.isAdmin)
                         {
+                            this.$store.commit('getEmail', this.form.email);
                             this.$router.push({name: 'home'});
                         }
                         else
@@ -244,8 +332,8 @@ export default {
                             this.$router.push({name: 'admin'});
                         }
                     }
-                }, 2000); 
-            }
+                
+           
         },
         resetModalRegister()
         {
@@ -258,80 +346,22 @@ export default {
             this.registerPasswordConfirm = '';
             this.registerPasswordConfirmState = null;
         },
-        async handleRegister(bvModalEvt)
+        async handleRegister()
         {
-            bvModalEvt.preventDefault();
-            let check = false;
-            if(this.registerUsername =='' || this.registerUsername.length <=4)
-            {
-                this.registerUsernameState = 'invalid';
-                if(this.registerUsername == '')
-                {
-                    this.invalidFeedbackUsername = "Empty Username.";
-                }
-                else
-                {
-                    this.invalidFeedbackUsername = "Almost there! Need username to be more that 4."
-                }
-                check = true;
-            }
-            else{
-                this.registerUsernameState = 'valid';
-            }
-            if(this.registerEmail == '' || (/\S+@\S+\.\S+/.test(this.registerEmail) == false))
-            {
-                this.registerEmailState = 'invalid';
-                if(this.registerEmail == '')
-                {
-                    this.invalidFeedbackEmail = 'Empty Email.';
-                }
-                else
-                {
-                    this.invalidFeedbackEmail = 'Emails does not seem to be valid.';
-                }
-                check = true;
-            }
-            else{
-                this.registerEmailState = 'valid';
-            }
-            if(this.registerPassword == '' && this.registerPasswordConfirm == '')
-            {
-                this.registerPasswordState = 'invalid';
-                this.invalidFeedbackPassword = 'Empty Password.';
-                this.registerPasswordConfirmState = 'invalid';
-                this.invalidFeedbackConfirmPassword = 'Empty Confirm Password.';
-                check = true;
-            }
-            else if(this.registerPassword != this.registerPasswordConfirm)
-            {
-                this.registerPasswordState = 'invalid';
-                this.registerPasswordConfirmState = 'invalid';
-                this.invalidFeedbackPassword = "Password and Confirm Password don't match.";
-                this.invalidFeedbackConfirmPassword = "Password and Confirm Password don't match";
-                check = true;
-            }
-            else
-            {
-                this.registerPasswordState = 'valid';
-                this.registerPasswordConfirmState = 'valid';
-            }
-            if(check)
-            {
-                return;
-            }
+            
+            this.registerModal = false;
+            //this.sending = true;
             this.isLoading = true;
-            this.registerPasswordState = 'valid';
-            this.registerEmailState = 'valid';
-            this.registerPasswordState = 'valid';
-            this.registerPasswordConfirmState = 'valid';
+           
             /**
              * send the request to the back end
              */
             let api = new Api();
             
-            const res = await api.postData('/register', {registerUsername: this.registerUsername, registerEmail: this.registerEmail, registerPassword: this.registerPassword}); 
-            setTimeout(() => {
-               this.isLoading = false; 
+            const res = await api.postData('/register', {registerUsername: this.form.registerUsername, registerEmail: this.form.registerEmail, registerPassword: this.form.registerPassword}); 
+            
+               //this.sending = false;
+               this.isLoading = false;
                if(res.data.status == 200)
                 {
                     this.$notify({
@@ -352,10 +382,10 @@ export default {
                         duration: 10000    
                         }) 
                 }
-            }, 2000);
-            this.$nextTick(() => {
-                this.$refs.modal.hide()
-            })    
+           
+            // this.$nextTick(() => {
+            //     this.$refs.modal.hide()
+            // })    
         },
         
         resetModal()
@@ -384,19 +414,31 @@ export default {
             
             const res = await api.postData('/forgotPassword', {email: this.email});
             // Hide the modal manually
-            this.$nextTick(() => {
-                this.$refs.modal.hide()
-            })
+            // this.$nextTick(() => {
+            //     this.$refs.modal.hide()
+            // })
         }
     }
 
 }
 </script>
 <style scoped>
+.md-progress-bar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+  }
 
+.md-card {
+    width:320px;
+    margin: 4px;
+    display: inline-block;
+    vertical-align: top;
+}
 .wrapper {
   position: fixed;
-  top: 3%;
+  top: 20%;
   left: 5%;
   right: 5%;
   width: 90%;
@@ -440,6 +482,4 @@ a {
   text-decoration: none;
   color: black;
 }
-
-
 </style>

@@ -1,13 +1,14 @@
 import axios from 'axios';
 export class Api
 {
-    //url = 'http://localhost:3000';
     constructor()
     {
         axios.defaults.withCredentials = true;
         this.url = "http://localhost:3000";   
     }
-
+    static getUrl() {
+        return "http://localhost:8080";
+    }
     postData(endpoint, data)
     {  
         return new Promise(async (resolve, reject) => {
@@ -75,6 +76,36 @@ export class Api
                 reject(e);
             }
         })
+    }
+
+    checkDirectory(to){
+        return new Promise(async(resolve, reject) => {
+         
+            try{
+                const basePath = "root/home";
+                let dirs = to.path.split(/\//);
+                let toPaths = [];
+                let path;
+                if(dirs.length >2)
+                {
+                    toPaths = to.path.split(/\//);
+                    toPaths.pop();
+                    path = basePath + toPaths.join('/');  
+                }
+                else
+                {
+                    path = basePath;
+                }
+                //let api = new Api();
+                const res = await this.getData('/file/is_directory',{path: path, directory: dirs[dirs.length - 1]});
+                resolve(res);
+            }
+            catch(e){
+                reject(e);
+            }
+        })
+        
+        
     }
 
     // post()
