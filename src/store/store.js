@@ -168,6 +168,7 @@ export default new Vuex.Store({
                     // const[res, sharedFiles] = await Promise.all([welcomePromise, sharedFilesPromise]);
                     if(res.data.status == 200 ) {
                         context.commit('getUsername', res.data.data.username);
+                        context.commit('getEmail',res.data.data.email);
                         context.commit('getAllDataForUser', res.data.data.result);
                         // context.commit('getSharedFiles', sharedFiles.data.data);
                         resolve(true);

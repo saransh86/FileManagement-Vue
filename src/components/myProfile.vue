@@ -13,7 +13,7 @@
                 <div class="md-toolbar-section-end">
                     <div class="md-layout-item">
                         <div class="searchBar">
-                            <vue-select placeholder="Search Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="this.allFiles" ></vue-select>
+                            <vue-select placeholder="Search My Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="this.allFiles" ></vue-select>
                         </div>
                     </div>
                     <userOptions/>
