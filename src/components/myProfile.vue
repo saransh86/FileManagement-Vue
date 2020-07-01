@@ -382,8 +382,7 @@ export default {
 .md-theme-default a  {
     color: black;
 }
-/* a span{
-    color: black;
-} */
-
+.md-list-item{
+    z-index: 0;
+}
 </style>
