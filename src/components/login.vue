@@ -15,7 +15,7 @@
                         <md-card class="md-layout-item"> 
 
                         <md-card-header>
-                            <div class="md-title">File Management</div>
+                            <div class="md-title">My_Files</div>
                         </md-card-header>
                         <md-card-content>
                             <div class="md-layout-item md-gutter">

@@ -9,7 +9,7 @@
                 <md-button class="md-icon-button" @click="toggleMenu" v-if="!menuVisible">
                     <font-awesome-icon icon="bars"></font-awesome-icon>
                 </md-button>
-                <h3 class="md-title md-layout-item" style="flex :1"> File Management </h3>
+                <h3 class="md-title md-layout-item" style="flex :1">My_Files</h3>
                 <div class="md-toolbar-section-end">
                     <div class="md-layout-item">
                         <div class="searchBar">
