@@ -2,7 +2,11 @@
 Its a simple web app to manage files.
 * Create as many directories and sub directories.
 * Upload, download, delete and move files.
-* Share files with users. 
+* Share files with other users.
+* Bookmark any folder for easy access.
+* Search for files. 
+* Responsive layout.
+
 
 ## How to run this project?
 This is just the frontend. To run the entire app:
