@@ -13,4 +13,4 @@ services:
     links:
       - db
     depends_on:
-      - d
+      - db
