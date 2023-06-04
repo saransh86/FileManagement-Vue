@@ -1,6 +1,6 @@
 <template>
     <div>
-        <notifications group="notify" position="top center" />
+        <!-- <notifications group="notify" position="top center" /> -->
         <navigate :key="componentkey" v-bind:user="user" />
     </div>
 </template>
