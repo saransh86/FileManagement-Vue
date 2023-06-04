@@ -5,56 +5,52 @@
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
             <div class="md-layout-item">
-               
-                <notifications group ="register" position="top center"/>
-                <notifications group ="login" position="top center"/>
 
+                <form novalidate class="md-layout-item" @submit.prevent="validateUser">
 
-                    <form novalidate class="md-layout-item" @submit.prevent="validateUser">
+                    <md-card class="md-layout-item"> 
 
-                        <md-card class="md-layout-item"> 
-
-                        <md-card-header>
-                            <div class="md-title">My_Files</div>
-                        </md-card-header>
-                        <md-card-content>
-                            <div class="md-layout-item md-gutter">
-                                <div class="md-layout-item md-small-size-100">
-                                    <md-field :class="getValidationClass('email')">
-                                        <label for="email"> Email </label>
-                                         <md-input name="email" id="email" v-model="form.email" :disabled="sending" />
-                                        <span class="md-error" v-if="!$v.form.email.required">The email is required.</span>
-                                        <span class="md-error" v-else-if="!$v.form.email.minlength">Invalid email.</span>
-                                    </md-field>
-                                </div>
+                    <md-card-header>
+                        <div class="md-title">My_Files</div>
+                    </md-card-header>
+                    <md-card-content>
+                        <div class="md-layout-item md-gutter">
+                            <div class="md-layout-item md-small-size-100">
+                                <md-field :class="getValidationClass('email')">
+                                    <label for="email"> Email </label>
+                                        <md-input name="email" id="email" v-model="form.email" :disabled="sending" />
+                                    <span class="md-error" v-if="!$v.form.email.required">The email is required.</span>
+                                    <span class="md-error" v-else-if="!$v.form.email.minlength">Invalid email.</span>
+                                </md-field>
                             </div>
+                        </div>
 
-                            <div class="md-layout-item md-gutter">
-                                <div class="md-layout-item md-small-size-100">
-                                    <md-field :md-toggle-password="false" :class="getValidationClass('password')">
-                                        <label for="password"> Password </label>
-                                        <md-input name="password" type="password" id="password" v-model="form.password" :disabled="sending" />
-                                        <span class="md-error" v-if="!$v.form.password.required">The password is required.</span>
-                                        <span class="md-error" v-else-if="!$v.form.password.minlength">Minimum length of password should be 6.</span>
-                                    </md-field>
-                                </div>
+                        <div class="md-layout-item md-gutter">
+                            <div class="md-layout-item md-small-size-100">
+                                <md-field :md-toggle-password="false" :class="getValidationClass('password')">
+                                    <label for="password"> Password </label>
+                                    <md-input name="password" type="password" id="password" v-model="form.password" :disabled="sending" />
+                                    <span class="md-error" v-if="!$v.form.password.required">The password is required.</span>
+                                    <span class="md-error" v-else-if="!$v.form.password.minlength">Minimum length of password should be 6.</span>
+                                </md-field>
                             </div>
-                            
-                            <div class="md-layout-item md-gutter">
-                                <div class="md-layout-item md-small-size-100">
-                                    <md-button :href="null" class="md-primary" :md-ripple=true @click="forgotPasswordModal = true" id="forgotPasswordModal">  Forgot Password</md-button>   
-                                </div>
+                        </div>
+                        
+                        <div class="md-layout-item md-gutter">
+                            <div class="md-layout-item md-small-size-100">
+                                <md-button :href="null" class="md-primary" :md-ripple=true @click="forgotPasswordModal = true" id="forgotPasswordModal">  Forgot Password</md-button>   
                             </div>
-                        </md-card-content>
-                        <md-progress-bar md-mode="indeterminate" v-if="sending" />
+                        </div>
+                    </md-card-content>
+                    <md-progress-bar md-mode="indeterminate" v-if="sending" />
 
-                        <md-card-actions md-alignment="space-between">
-                            <md-button class="md-primary" @click="registerModal = true" id="registerModal"> Register </md-button>
-                            <md-button type="submit" class="md-primary" :disabled="sending" id="loginSubmit">Login</md-button>
-                        </md-card-actions>
-      
-                        </md-card>
-                    </form>  
+                    <md-card-actions md-alignment="space-between">
+                        <md-button class="md-primary" @click="registerModal = true" id="registerModal"> Register </md-button>
+                        <md-button type="submit" class="md-primary" :disabled="sending" id="loginSubmit">Login</md-button>
+                    </md-card-actions>
+    
+                    </md-card>
+                </form>  
                
             </div>    
 
@@ -154,13 +150,14 @@
 import '../../node_modules/vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
+// import {WebSocketClass} from '../websocket';
 import { validationMixin } from 'vuelidate';
 import {sameAs} from 'vuelidate/lib/validators';
 import {
     required,
     email,
     minLength,
-  } from 'vuelidate/lib/validators'
+  } from 'vuelidate/lib/validators';
 export default {
     name: 'login',
     mixins: [validationMixin],
@@ -181,7 +178,8 @@ export default {
             sending : false,
             registerModal: false,
             forgotPasswordModal: false,
-            api: new Api()
+            api: new Api(),
+            // socket: new WebSocketClass()
         }
     },
     validations: {
@@ -266,74 +264,51 @@ export default {
             this.forgotPasswordModal = false;
             this.isLoading = true;
             const res = await this.api.postData('/forgotPassword',{email: email});
-                this.isLoading = false;
-                if(res.data.status == 200){
-                    this.$notify({
-                        group: 'login',
-                        title: 'Email Sent!',
-                        type: 'success',
-                        text: res.data.message,
-                        duration: 10000
-                    })
-                }
-                else{
-                    this.$notify({
-                        group: 'login',
-                        title: 'Email error!',
-                        type: 'error',
-                        text: res.data.message,
-                        duration: 10000
-                    })
-                }
+            this.isLoading = false;
             
+            if(res.data.status == 200){
+                this.$toast.success("Email Sent", {
+                    position: "top-right"
+                });
+            }
+            else{
+                this.$toast.error("Email Error", {
+                    position: "top-right"
+                }); 
+            } 
         },
         getValidationClass (fieldName) {
-        const field = this.$v.form[fieldName]
+            const field = this.$v.form[fieldName]
 
-        if (field) {
-          return {
-            'md-invalid': field.$invalid && field.$dirty
-          }
-        }
-      },
-        async handleLogin()
-        {
-           
-                //this.sending = true;
-                this.isLoading = true;
-                let api = new Api();
-                let res = await api.postData("/authenticate", {email: this.form.email, password: this.form.password});
-                
-                    //this.sending= false;
-                    this.isLoading = false;
-                    if(res.data.status == 300)
-                    {
-                        this.$notify({
-                            group: 'login',
-                            title: 'Login error!',
-                            type: 'error',
-                            text: res.data.message,
-                            duration: 10000
-                        })
-                    }
-                    else if(res.data.status == 401)
-                    {
-                        this.$router.push({name: 'login'});
-                    }
-                    else if( res.data.status == 200)
-                    {
-                        if(!res.data.isAdmin)
-                        {
-                            this.$store.commit('getEmail', this.form.email);
-                            this.$router.push({name: 'home'});
-                        }
-                        else
-                        {
-                            this.$router.push({name: 'admin'});
-                        }
-                    }
-                
-           
+            if (field) {
+                return {
+                    'md-invalid': field.$invalid && field.$dirty
+                }
+            }
+        },
+        async handleLogin(){
+            this.isLoading = true;
+            let api = new Api();
+            let res = await api.postData("/authenticate", {email: this.form.email, password: this.form.password});
+            this.isLoading = false;
+            if(res.data.status == 300){
+                this.$toast.error("Email Error:\n" + res.data.message, {
+                    position: "top-right"
+                }); 
+            }
+            else if(res.data.status == 401){
+                this.$router.push({name: 'login'});
+            }
+            else if( res.data.status == 200){
+                if(!res.data.isAdmin){
+                    this.$store.commit('getEmail', this.form.email);
+                    Api.token = res.data.token;
+                    this.$router.push({name: 'home'});
+                }
+                else{
+                    this.$router.push({name: 'admin'});
+                }
+            }
         },
         resetModalRegister()
         {
@@ -346,11 +321,8 @@ export default {
             this.registerPasswordConfirm = '';
             this.registerPasswordConfirmState = null;
         },
-        async handleRegister()
-        {
-            
+        async handleRegister(){
             this.registerModal = false;
-            //this.sending = true;
             this.isLoading = true;
            
             /**
@@ -360,41 +332,24 @@ export default {
             
             const res = await api.postData('/register', {registerUsername: this.form.registerUsername, registerEmail: this.form.registerEmail, registerPassword: this.form.registerPassword}); 
             
-               //this.sending = false;
-               this.isLoading = false;
-               if(res.data.status == 200)
-                {
-                    this.$notify({
-                        group: 'register',
-                        title: 'Registration Successful!',
-                        type: 'success',
-                        text: res.data.message,
-                        duration: 10000 
-                    })
-                }
-                else if(res.data.status == 300)
-                {
-                    this.$notify({
-                        group: 'register',
-                        title: 'Registration Error!',
-                        type: 'warn',
-                        text: res.data.message,
-                        duration: 10000    
-                        }) 
-                }
-           
-            // this.$nextTick(() => {
-            //     this.$refs.modal.hide()
-            // })    
+            this.isLoading = false;
+            if(res.data.status == 200){
+                this.$toast.success("Registration Successful", {
+                    position: "top-right"
+                });
+            }
+            else if(res.data.status == 300){
+                this.$toast.warning("Registration Failed\n" + res.data.message, {
+                    position: "top-right"
+                });
+            }
         },
         
-        resetModal()
-        {
+        resetModal(){
             this.email = ''
             this.emailState = null
         },
-        async handleForgotPassword(bvModalEvt)
-        {
+        async handleForgotPassword(bvModalEvt){
             // Prevent modal from closing
             bvModalEvt.preventDefault()
             const valid = this.$refs.form1.checkValidity();
@@ -413,13 +368,8 @@ export default {
             let api = new Api();
             
             const res = await api.postData('/forgotPassword', {email: this.email});
-            // Hide the modal manually
-            // this.$nextTick(() => {
-            //     this.$refs.modal.hide()
-            // })
         }
     }
-
 }
 </script>
 <style scoped>

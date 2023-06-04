@@ -3,7 +3,6 @@
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        <notifications group="notify" position="top center" />
         <md-app>
             <md-app-toolbar class="md-primary "> 
                 <md-button class="md-icon-button" @click="toggleMenu" v-if="!menuVisible">
@@ -86,6 +85,7 @@
                     <md-tab id="tab-home" md-label="Home" to="/" md-alignment="center" exact />
                     <md-tab id="tab-share" md-label="Shared" to="/share" md-alignment="center" exact />
                 </md-tabs>
+                
                 <div>
                     
                     <md-list  class="md-size-5">
@@ -102,25 +102,30 @@
                                 <md-checkbox class="md-primary" @change="selectAll" v-model="allSelected" />
                             </div>
                         </md-list-item>
-                        <div v-for="(dir) in this.directories" :key="dir">
-                            <md-list-item class="pointer">
-                                <md-checkbox :value="dir" v-model="checkedDirs" class="md-primary" @change="select"/>
-                                <md-icon> 
-                                    <font-awesome-icon icon="folder-open" ></font-awesome-icon>
-                                </md-icon>
-                                <a class="md-list-item-text space" v-if="userData.apath === ''" v-bind:href="url + dir">{{dir}}</a>  
-                                <a class="md-list-item-text space" v-else v-bind:href="url + userData.apath +'/' + dir"> {{dir}}</a>          
-                            </md-list-item>
-                        </div>
-                        <div v-for="(file) in this.files" :key="file">
-                            <md-list-item>
-                                <md-checkbox :value="file" v-model="checkedFiles" class="md-primary" @change="select"/>
-                                <md-icon>
-                                    <font-awesome-icon icon="file"></font-awesome-icon>
-                                </md-icon>
-                                <span class="md-list-item-text space" :value="file">{{file}}</span>
-                            </md-list-item>
-                        </div>
+                        <draggable  class="list-group" :list="this.directories" ghost-class="ghost" group="people" @change="dragUpdate" >
+                            <div v-for="(dir) in this.directories" :key="dir">
+                                <md-list-item class="pointer">
+                                    <md-checkbox :value="dir" v-model="checkedDirs" class="md-primary" @change="select"/>
+                                    <md-icon> 
+                                        <font-awesome-icon icon="folder-open" ></font-awesome-icon>
+                                    </md-icon>
+                                    <a class="md-list-item-text space" v-if="userData.apath === ''" v-bind:href="url + dir">{{dir}}</a>  
+                                    <a class="md-list-item-text space" v-else v-bind:href="url + userData.apath +'/' + dir"> {{dir}}</a>          
+                                </md-list-item>
+                                
+                            </div>
+                        </draggable>
+                        <draggable  class="list-group" :list="this.files" ghost-class="ghost" group="people" > 
+                            <div v-for="(file) in this.files" :key="file" style="cursor:grab">
+                                <md-list-item >
+                                    <md-checkbox :value="file" v-model="checkedFiles" class="md-primary" @change="select"/>
+                                    <md-icon>
+                                        <font-awesome-icon icon="file"></font-awesome-icon>
+                                    </md-icon>
+                                    <span class="md-list-item-text space" :value="file">{{file}}</span>     
+                                </md-list-item>
+                            </div>
+                        </draggable>
                     </md-list>  
                 </div>
             </md-app-content>
@@ -196,6 +201,7 @@
 
 <script>
 import "../../node_modules/vue-loading-overlay/dist/vue-loading.css";
+import draggable from 'vuedraggable'
 import Loading from "vue-loading-overlay";
 import {Api} from '../api';
 import VueSelect from 'vue-select';
@@ -212,15 +218,10 @@ export default {
             url: Api.getUrl() + "/#/",
             selected :null,
             // menuVisible: false,
-           
-            
-            
             selectedDir: null,
-           
             checkedFiles: [],
             checkedDirs: [],
             allSelected: false,
-
             isLoading: false,
             fullPage: true,
             componentkey: 0,
@@ -235,8 +236,8 @@ export default {
             styleObj:{
                 zIndex: null
             },
-            userData: this.user
-            
+            userData: this.user,
+            socket : null
         }
     },
     validations: {
@@ -254,7 +255,8 @@ export default {
     components: {
         Loading,
         VueSelect,
-        userOptions
+        userOptions,
+        draggable
     },
     computed: {
         allFiles(){
@@ -286,7 +288,57 @@ export default {
             type: Object
         }
     },
+    created: function() {
+        
+        console.log("Starting connection to WebSocket Server");
+        this.connection = new WebSocket("ws://localhost:3001/ws?token=" + Api.token);
+
+        this.connection.onmessage = function(e) {
+            console.log(JSON.parse(e.data));
+            let res = JSON.parse(e.data);
+            console.log("RES", res);
+            if(res.status ===200 && res.message==="File Shared with you"){
+                this.$toast(res.email + " just shared a with with you!",{
+                    position: "bottom-center",
+                    hideProgressBar: true
+                }); 
+            }
+        }.bind(this);
+
+        this.connection.onopen = function(event) {
+            console.log(event)
+            console.log("Successfully connected to the echo websocket server...")
+        }
+
+    },
     methods: {
+        sendMessage: function(message) {
+            console.log("Hello")
+            console.log(this.connection);
+            this.connection.send(message);
+        },
+        dragUpdate(e){
+            if(e.moved){
+                return;
+            }
+            /**
+             * Draggable adds the files to the directory list, delete and forceupdate
+             */
+            let ele = e.added.element;
+            let directoryName = this.directories[e.added.newIndex+1];
+            
+            let dirInfo = this.allDirectories.find(obj => {
+                return obj.directoryName === directoryName;
+            })
+            
+            lodash.remove(this.directories, function(list){
+                return list == ele;
+            });
+            this.checkedFiles.push(ele);
+            this.selectedDir = dirInfo;
+            this.moveFileToDirectory();
+            this.forceUpdate();
+        },
         hideDrawer(){
             this.styleObj.zIndex = "auto";
         },
@@ -360,25 +412,13 @@ export default {
             this.isLoading = false;
 
             if (res.data.status == 200) {
-                this.$notify({
-                    group: "notify",
-                    title: "Share Successful!",
-                    type: "success",
-                    text: res.data.message,
-                    duration: 10000
-                });
+                this.$toast.success("Share Successful");
             } 
             else if (res.data.status == 401) {
                 this.$router.push({ name: "login" });
             } 
             else {
-                this.$notify({
-                    group: "notify",
-                    title: "Share error.",
-                    type: "error",
-                    text: res.data.message,
-                    duration: 10000
-                });
+                this.$toast.error("Share Error: " + "Cannot find user"); 
             }
         },
         async moveFileToDirectory() {
@@ -415,26 +455,13 @@ export default {
                     update[path]['files'].push(item);
                 })
                 this.$store.dispatch('commitMutex', update);
-                
-                this.$notify({
-                    group: "notify",
-                    title: "Move Successful!",
-                    type: "success",
-                    text: res.data.message,
-                    duration: 10000
-                });
+                this.$toast.success("Move Successful");
             }
             else if (res.data.status == 401) {
                 this.$router.push({ name: "login" });
             }
             else {
-                this.$notify({
-                    group: "notify",
-                    title: "Move error.",
-                    type: "error",
-                    text: res.data.message,
-                    duration: 10000
-                });
+                this.$toast.error("Move Error"); 
             }
             this.checkedFiles = [];
         },
@@ -462,13 +489,7 @@ export default {
             data.append("path", this.userData.path);
             if (filesToUpload.length == 0) {
                 this.isLoading = false;
-                this.$notify({
-                    group: "notify",
-                    title: "Upload existing files.",
-                    type: "warn",
-                    text: "Files you selected are already uploaded.",
-                    duration: 10000
-                });
+                this.$toast.warning("File Exists");
             } 
             else {
                 let api = new Api();
@@ -490,21 +511,9 @@ export default {
                     
                     this.$store.dispatch('commitMutex', update);
                     
-                    this.$notify({
-                        group: "notify",
-                        title: "Upload Success!",
-                        type: "success",
-                        text: res.data.message,
-                        duration: 10000
-                    });
+                    this.$toast.success("Upload Sucessful");
                     if (filesToUpload.length != files.length) {
-                        this.$notify({
-                            group: "notify",
-                            title: "Upload existing files.",
-                            type: "warn",
-                            text: "Files you selected are already uploaded.",
-                            duration: 10000
-                        });
+                        this.$toast.warning("File Exists");
                     }
                     
                 } 
@@ -512,19 +521,13 @@ export default {
                     this.$router.push({ name: "login" });
                 }    
                 else {
-                    this.$notify({
-                        group: "notify",
-                        title: "Upload error.",
-                        type: "error",
-                        text: res.data.message,
-                        duration: 10000
-                    });
+                    this.$toast.error("Upload Error"); 
                 }
             }
             await this.forceUpdate();
         },
         async handleCreateDirectory() {
-            
+            console.log("Cookies", this.$cookies.get('email'), this.$cookies.get('token'));
             const name = this.form.directoryName;
             this.directoryState = "valid";
             this.isLoading = true;
@@ -547,12 +550,8 @@ export default {
                 }
                 update[this.userData.path]['directories'].push(name);
                 this.$store.dispatch('commitMutex', update);
-                this.$notify({
-                    group: "notify",
-                    title: "Directory Created!",
-                    type: "success",
-                    text: res.data.message,
-                    duration: 10000
+                this.$toast.success("Directory Created", {
+                    toastClassName: "my-custom-toast-class"
                 });
             }
             else if (res.data.status == 401) {
@@ -561,13 +560,7 @@ export default {
             }
             else {
                 this.isLoading = false;
-                this.$notify({
-                    group: "notify",
-                    title: "Directory error.",
-                    type: "error",
-                    text: res.data.message,
-                    duration: 10000
-                });
+                this.$toast.error("Directory Create Error"); 
             }
         },
         async bulkDelete() {
@@ -614,13 +607,7 @@ export default {
                     
                     await this.$store.dispatch('commitMutex', update);
                     
-                    this.$notify({
-                        group: "notify",
-                        title: "Delete Successful!",
-                        type: "success",
-                        text: "Delete successful for files and directories!",
-                        duration: 10000
-                    });
+                    this.$toast.success("Delete Successful");
                     
                 }
                 else if (res[0].data.status == 401 || res[1].data.status == 401) {
@@ -634,13 +621,8 @@ export default {
                     else {
                         text = res[1].data.message;
                     }
-                    this.$notify({
-                        group: "notify",
-                        title: "Delete Failed.",
-                        type: "error",
-                        text: text,
-                        duration: 10000
-                    });
+                    
+                    this.$toast.error("Delete Failed"); 
                     
                 }
                 this.checkedFiles = [];
@@ -677,26 +659,13 @@ export default {
                     })
                     this.$store.dispatch('commitMutex', update);
                     // this.userData.allDirectories = this.$store.getters.getAllDirectories;
-                    this.$notify({
-                        group: "notify",
-                        title: "Directory Delete Success!",
-                        type: "success",
-                        text: res.data.message,
-                        duration: 10000
-                    });
-                    
+                    this.$toast.success("Delete Successful");
                 }
                 else if (res.data.status == 401) {
                     this.$router.push({ name: "login" });
                 }
                 else {
-                    this.$notify({
-                        group: "notify",
-                        title: "Delete Directory Failed.",
-                        type: "error",
-                        text: res.data.message,
-                        duration: 10000
-                    });
+                    this.$toast.error("Delete Failed"); 
                 }
                 this.checkedDirs = [];
             } 
@@ -715,26 +684,16 @@ export default {
 
                     this.$store.dispatch('commitMutex', update);
                     
-                    this.$notify({
-                        group: "notify",
-                        title: "File Delete Success!",
-                        type: "success",
-                        text: res.data.message,
-                        duration: 10000
-                    });
+                    this.$toast.success("Delete Successful");
                     
                 }
                 else if (res.data.status == 401) {
                     this.$router.push({ name: "login" });
                 }
                 else {
-                    this.$notify({
-                        group: "notify",
-                        title: "File Directory Failed.",
-                        type: "error",
-                        text: res.data.message,
-                        duration: 10000
-                    });
+                    
+                    this.$toast.error("Delete Failed"); 
+                    
                 }
                 this.checkedFiles = [];
             }
@@ -764,13 +723,7 @@ export default {
                     this.$router.push({ name: "login" });
                 }
                 else if (res.data.status == 300) {
-                    this.$notify({
-                        group: "notify",
-                        title: "Download error.",
-                        type: "error",
-                        text: res.data.message,
-                        duration: 10000
-                    });
+                    this.$toast.error("Download Error"); 
                 }
                 else {
                     const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -844,4 +797,10 @@ export default {
 .md-list-item{
     z-index: 0;
 }
+.ghost {
+  opacity: 0.5;
+  background: #c8d8fb;
+}
+
+
 </style>

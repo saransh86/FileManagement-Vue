@@ -22,13 +22,13 @@
                 <font-awesome-icon icon="user-circle" size="2x" class="icon"></font-awesome-icon>
             </md-button>
             <md-menu-content> 
-                <md-menu-item  v-bind:href="url + 'myProfile'">
+                <md-menu-item v-bind:href="url + 'myProfile'">
                     <!-- <font-awesome-icon icon="user"></font-awesome-icon> -->
                     <span> My Profile </span>
                 </md-menu-item>
-                <md-menu-item>
+                <md-menu-item class="pointer" v-bind:href="url">
                     <!-- <font-awesome-icon icon="sign-out-alt"></font-awesome-icon> -->
-                    <span @click="signOut">Sign Out </span>
+                    <span  @click="signOut">Sign Out </span>
                 </md-menu-item>
             </md-menu-content>
         </md-menu>
@@ -104,4 +104,5 @@ data-icon {
      text-decoration: none;
   color: black;
 }
+.pointer {cursor: pointer;}
 </style>
