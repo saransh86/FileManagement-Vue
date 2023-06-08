@@ -5,7 +5,6 @@ import 'vue-material/dist/theme/default.css'
 
 import BootstrapVue from 'bootstrap-vue'
 import VueRouter from 'vue-router'
-import Notifications from 'vue-notification';
 
 import login from './components/login'
 import directory from './components/directory'
@@ -21,16 +20,46 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faFile, faUser, faEnvelope, faKey, faFolderOpen, faTrashAlt, faUserCircle, faSignOutAlt, faUpload, faBars, faAngleLeft, faPeopleCarry, faShare, faDownload} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import VueCookies from 'vue-cookies';
+
 import {Api} from './api';
 import store from './store/store';
+import Toast, {TYPE} from "vue-toastification";
+// Import the CSS or use your own!
+import "vue-toastification/dist/index.css";
+
+const options = {
+    // You can set your default options here
+    toastDefaults: {
+      // ToastOptions object for each type of toast
+      [TYPE.ERROR]: {
+          timeout: 5000,
+          closeButton: false,
+          hideProgressBar: true,
+          position: 'bottom-center'
+      },
+      [TYPE.SUCCESS]: {
+          timeout: 5000,
+          hideProgressBar: true,
+          position: 'bottom-center'
+      },
+      [TYPE.WARNING]: {
+          timeout: 5000,
+          hideProgressBar: true,
+          position: 'bottom-center'
+      }
+      
+  }
+};
+
+
+
 library.add(faFile, faUser, faEnvelope, faKey, faFolderOpen, faTrashAlt, faUserCircle, faSignOutAlt, faUpload, faBars, faAngleLeft, faPeopleCarry, faShare, faDownload)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.use(BootstrapVue)
 Vue.use(VueRouter)
-Vue.use(Notifications)
-Vue.use(VueCookies)
+Vue.use(Toast, options);
+
 Vue.use(VueMaterial)
 //Vue.use(jwtDecode);
 Vue.config.productionTip = false

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <notifications group="notify" position="top center" />
+        <!-- <notifications group="notify" position="top center" /> -->
         <navigate :key="componentkey" v-bind:user="user" />
     </div>
 </template>
@@ -94,7 +94,7 @@ export default {
             this.user.apath = res[res.length - 1].path;
             this.path = "root/home/" + res[res.length - 1].path;
             
-            this.$store.dispatch('getFilesAndDirectories', this.path);
+            // this.$store.dispatch('getFilesAndDirectories', this.path);
             this.user.path = this.path;
             this.isLoading = false;
             

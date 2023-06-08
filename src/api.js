@@ -1,13 +1,14 @@
 import axios from 'axios';
 export class Api
 {
+    static token = '';
     constructor()
     {
         axios.defaults.withCredentials = true;
         this.url = "http://localhost:3000";   
     }
     static getUrl() {
-        return "http://localhost:8080";
+        return "";
     }
     postData(endpoint, data)
     {  

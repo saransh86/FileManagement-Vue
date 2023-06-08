@@ -56,9 +56,7 @@ import { validationMixin } from 'vuelidate';
 import {sameAs} from 'vuelidate/lib/validators';
 import {
     required,
-    email,
-    minLength,
-    maxLength
+    minLength
   } from 'vuelidate/lib/validators'
 export default {
     name: 'resetPassword',

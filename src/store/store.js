@@ -16,7 +16,8 @@ export default new Vuex.Store({
         userData: {},
         sharedFiles: [],
         email: '',
-        showMenu: false
+        showMenu: false,
+        
     },
     mutations: {
         getShowMenu(state, menu){
@@ -203,6 +204,7 @@ export default new Vuex.Store({
             context.state.allDirectories.length = 0;
             context.state.allFiles.length = 0;
             context.state.showMenu = false;
+            context.state.email = '';
         }
     }
 })

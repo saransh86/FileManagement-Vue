@@ -61,7 +61,6 @@
 import 'vue-loading-overlay/dist/vue-loading.css';
 import Loading from 'vue-loading-overlay';
 import {Api} from '../api';
-import lodash from 'lodash';
 import navBar from './navigationBar';
 export default {
     name: 'admin',
