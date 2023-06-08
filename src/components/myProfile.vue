@@ -3,7 +3,7 @@
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        <notifications group="notify" position="top center" />
+        <!-- <notifications group="notify" position="top center" /> -->
         <md-app>
             <md-app-toolbar class="md-primary "> 
                 <md-button class="md-icon-button" @click="toggleMenu" v-if="!menuVisible">

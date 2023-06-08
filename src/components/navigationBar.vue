@@ -11,7 +11,7 @@
                 <h3 class="md-title md-layout-item" style="flex :1"> My_Files</h3>
                 <div class="md-toolbar-section-end">
                     <div class="md-layout-item">
-                        <div class="searchBar">
+                        <div >
                             <vue-select :key="componentkey" placeholder="Search My Files" @input="setSelected" :clearable="false" label="fileName" v-model="selected" :options="this.allFiles" ></vue-select>
                         </div>
                     </div>
@@ -82,12 +82,13 @@
 
             <md-app-content>
                 <md-tabs :hidden="userData.directoryName.length > 0" md-sync-route>
+                    <template slot="md-tab" slot-scope="{ tab }">
+                        {{ tab.label }} <i class="badge" v-if="tab.data.badge">{{ tab.data.badge }}</i>
+                    </template>
                     <md-tab id="tab-home" md-label="Home" to="/" md-alignment="center" exact />
-                    <md-tab id="tab-share" md-label="Shared" to="/share" md-alignment="center" exact />
-                </md-tabs>
-                
+                    <md-tab id="tab-share" md-label="Shared With Me" @click="clickSharedTab" md-alignment="center" :md-template-data="{badge: sharedFiles}"/>
+                </md-tabs>  
                 <div>
-                    
                     <md-list  class="md-size-5">
                         <md-list-item :hidden="userData.directoryName.length == 0" class="md-size-15">
                             <div >
@@ -237,7 +238,7 @@ export default {
                 zIndex: null
             },
             userData: this.user,
-            socket : null
+            sharedFiles: 0
         }
     },
     validations: {
@@ -281,6 +282,9 @@ export default {
         },
         menuVisible(){
             return this.$store.getters.getShowMenu;
+        },
+        email(){
+            return this.$store.getters.getEmail;
         }
     },
     props: {
@@ -288,35 +292,41 @@ export default {
             type: Object
         }
     },
-    created: function() {
-        
-        console.log("Starting connection to WebSocket Server");
-        this.connection = new WebSocket("ws://localhost:3001/ws?token=" + Api.token);
+    async created(){
+        await this.$store.dispatch('getFilesAndDirectories', this.user.path);
+        // console.log("Starting connection to WebSocket Server", this.email);
+        this.connection = new WebSocket("ws://localhost:3000/ws?email=" + this.email);
 
         this.connection.onmessage = function(e) {
-            console.log(JSON.parse(e.data));
+            // console.log(JSON.parse(e.data));
             let res = JSON.parse(e.data);
-            console.log("RES", res);
+            // console.log("RES", res);
             if(res.status ===200 && res.message==="File Shared with you"){
+                this.sharedFiles += res.count;
                 this.$toast(res.email + " just shared a with with you!",{
                     position: "bottom-center",
                     hideProgressBar: true
                 }); 
+                
             }
         }.bind(this);
 
-        this.connection.onopen = function(event) {
-            console.log(event)
-            console.log("Successfully connected to the echo websocket server...")
+        this.connection.onopen = function() {
+            // console.log(event)
+            // console.log("Successfully connected to the echo websocket server...")
         }
 
     },
     methods: {
-        sendMessage: function(message) {
-            console.log("Hello")
-            console.log(this.connection);
-            this.connection.send(message);
+        clickSharedTab (){
+            this.sharedFiles = 0;
+            this.$router.push({ name: "share" });
         },
+        // sendMessage: function(message) {
+        //     // console.log("Hello")
+        //     console.log(this.connection);
+        //     this.connection.send(message);
+        // },
         dragUpdate(e){
             if(e.moved){
                 return;
@@ -410,7 +420,6 @@ export default {
                 path: path
             });
             this.isLoading = false;
-
             if (res.data.status == 200) {
                 this.$toast.success("Share Successful");
             } 
@@ -527,7 +536,6 @@ export default {
             await this.forceUpdate();
         },
         async handleCreateDirectory() {
-            console.log("Cookies", this.$cookies.get('email'), this.$cookies.get('token'));
             const name = this.form.directoryName;
             this.directoryState = "valid";
             this.isLoading = true;
@@ -614,7 +622,7 @@ export default {
                     this.$router.push({ name: "login" });
                 }
                 else if (res[0].data.status == 300 || res[1].data.status == 300) {
-                    var text;
+                    let text;
                     if (res[0].data.status == 300) {
                         text = res[0].data.message;
                     } 
@@ -802,5 +810,25 @@ export default {
   background: #c8d8fb;
 }
 
-
+.v-select{
+    color:black;
+}
+.badge {
+    width: 19px;
+    height: 19px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: red;
+    border-radius: 100%;
+    color: #fff;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: -.05em;
+    font-family: 'Roboto Mono', monospace;
+  }
 </style>

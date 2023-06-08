@@ -26,9 +26,14 @@ export default {
     components: {
         navigate
     },
+    computed: {
+        email(){
+            return this.$store.getters.getEmail;
+        }
+    },
     async created() {
         this.user.path="root/home";
-        this.$store.dispatch('getFilesAndDirectories', this.user.path);
-    },
+        // await this.$store.dispatch('getFilesAndDirectories', this.user.path);
+    }
 }
 </script>

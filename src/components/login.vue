@@ -247,9 +247,9 @@ export default {
              if(!this.$v.form.registerUsername.$invalid && !this.$v.form.registerEmail.$invalid && !this.$v.form.registerPassword.$invalid && !this.$v.form.registerPasswordConfirm.$invalid){
                  this.handleRegister();
              }
-             else{
-                 console.log("form not fixed!");
-             }
+            //  else{
+            //     console.log("form not fixed!");
+            //  }
          },
          validateUser () {
             this.$v.form.email.$touch();
@@ -365,9 +365,8 @@ export default {
                 return;
             }
             this.emailState = 'valid';
-            let api = new Api();
-            
-            const res = await api.postData('/forgotPassword', {email: this.email});
+            let api = new Api();   
+            await api.postData('/forgotPassword', {email: this.email});
         }
     }
 }

@@ -3,7 +3,7 @@
         <div class="vld-parent">
             <loading :active.sync="isLoading" :can-cancel="false" :is-full-page="fullPage"></loading>
         </div>
-        <notifications group="notify" position="top center" />
+        <!-- <notifications group="notify" position="top center" /> -->
         <md-app>
             <md-app-toolbar class="md-primary "> 
                 <md-button class="md-icon-button" @click="toggleMenu" v-if="!menuVisible">
@@ -43,7 +43,7 @@
             <md-app-content>
                 <md-tabs md-sync-route>
                     <md-tab id="tab-home" md-label="Home" to="/" md-alignment="center" exact />
-                    <md-tab id="tab-share" md-label="Shared" to="/share" md-alignment="center" exact />
+                    <md-tab id="tab-share" md-label="Shared With Me" to="/share" md-alignment="center" exact />
                 </md-tabs>
                 <div>
                     <md-list>
@@ -146,8 +146,7 @@ export default {
                     link.click();
                 }
             }
-            catch(e)
-            {
+            catch(e){
                 console.log("Error in download", e.message);
             } 
         },
@@ -205,5 +204,8 @@ export default {
 }
 .md-theme-default a  {
     color: black;
+}
+.v-select{
+    color:black;
 }
 </style>

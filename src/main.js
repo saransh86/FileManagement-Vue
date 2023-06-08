@@ -20,7 +20,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faFile, faUser, faEnvelope, faKey, faFolderOpen, faTrashAlt, faUserCircle, faSignOutAlt, faUpload, faBars, faAngleLeft, faPeopleCarry, faShare, faDownload} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import VueCookies from 'vue-cookies';
+
 import {Api} from './api';
 import store from './store/store';
 import Toast, {TYPE} from "vue-toastification";
@@ -59,7 +59,7 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(BootstrapVue)
 Vue.use(VueRouter)
 Vue.use(Toast, options);
-Vue.use(VueCookies)
+
 Vue.use(VueMaterial)
 //Vue.use(jwtDecode);
 Vue.config.productionTip = false

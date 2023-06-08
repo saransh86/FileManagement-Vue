@@ -2,11 +2,11 @@ import * as WebSocket from 'ws';
 
 export class WebSocketClass {
     constructor() {
-        this.url = "ws://localhost:3001"
+        this.url = "ws://localhost:3000"
         this.ws = null;
     }
     connectToServer() {
-        const ws = new WebSocket('ws://localhost:3001/ws');
+        const ws = new WebSocket('ws://localhost:3000/ws');
         return new Promise(async (resolve, reject) => {
             const timer = setInterval(() => {
                 if(ws.readyState === 1) {
